@@ -415,32 +415,6 @@ body.is-locked .scrapbook {
   transform: scale(1.02);
 }
 
-/* ================= VIDEO POLAROID ================= */
-.polaroid-video {
-  max-width: 440px;
-  margin: 0 auto;
-  --tilt: -1deg;
-  cursor: default;
-}
-
-.polaroid-video:hover {
-  transform: rotate(0deg) translateY(-4px);
-}
-
-.video-frame {
-  width: 100%;
-  background: #141418;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.video-frame video {
-  display: block;
-  width: 100%;
-  max-height: 540px;
-  object-fit: contain;
-}
-
 /* Warm artistic placeholder when real photo isn't dropped in yet */
 .photo-placeholder {
   width: 100%;

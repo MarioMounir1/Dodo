@@ -155,20 +155,9 @@ window.SCRAPBOOK_CONFIG = {
     },
   ],
 
-  // Special Video Moment
-  videoMoment: {
-    enabled: true,
-    src: "photos/our-video.mp4",
-    kicker: "02 / Moving Memory",
-    title: "A Little Clip of Us",
-    titleAr: "فيديو صغير لينا بحبه أوي",
-    caption: "Press play whenever you miss me",
-    captionAr: "شغليه كل ما أوحشك ♥",
-  },
-
   // Handwritten Love Letter section
   letter: {
-    eyebrow: "03 / From Mario's Heart",
+    eyebrow: "02 / From Mario's Heart",
     title: "For you, دودو",
     titleAr: "كلام من قلبي ليكي",
     greeting: "My dearest دودو,",

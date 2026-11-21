@@ -195,19 +195,6 @@
     grid.appendChild(figure);
   });
 
-  // ================= VIDEO MEMORY =================
-  const videoSection = $("video-section");
-  if (cfg.videoMoment && cfg.videoMoment.enabled) {
-    $("video-kicker").textContent = cfg.videoMoment.kicker;
-    $("video-title").textContent = cfg.videoMoment.title;
-    $("video-title-ar").textContent = cfg.videoMoment.titleAr;
-    $("video-caption-en").textContent = cfg.videoMoment.caption;
-    $("video-caption-ar").textContent = cfg.videoMoment.captionAr;
-    $("memory-video").src = cfg.videoMoment.src;
-  } else if (videoSection) {
-    videoSection.style.display = "none";
-  }
-
   // ================= HANDWRITTEN LOVE LETTER =================
   $("letter-eyebrow").textContent = cfg.letter.eyebrow;
   $("letter-title").textContent = cfg.letter.title;
