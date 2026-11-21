@@ -4,22 +4,18 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // Convert Arabic-Indic numerals (٠١٢٣٤٥٦٧٨٩) to ASCII digits
-  function toAsciiDigits(str) {
-    return str
+  // Convert Arabic-Indic numerals (٠١٢٣٤٥٦٧٨٩) to ASCII digits and strip non-digits
+  function toDigits(str) {
+    return String(str || "")
       .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-  }
-
-  function normalizeDateInput(raw) {
-    const ascii = toAsciiDigits(String(raw || "").trim());
-    const cleaned = ascii.replace(/[\s.\-\\]+/g, "/").replace(/\/+/g, "/");
-    return cleaned;
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/\D/g, "");
   }
 
   // Heart burst helper
   const burstLayer = $("burst-layer");
   function spawnHearts(originEl, count = 9) {
+    if (!burstLayer) return;
     const rect = originEl
       ? originEl.getBoundingClientRect()
       : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
@@ -45,42 +41,74 @@
   const lockCfg = cfg.lockScreen;
   const lockScreen = $("lock-screen");
   const lockCard = $("lock-card");
-  const lockInput = $("lock-input");
+  const dayInput = $("lock-day");
+  const monthInput = $("lock-month");
+  const yearInput = $("lock-year");
   const lockError = $("lock-error");
   const UNLOCK_KEY = "dodo_mario_unlocked_17_8_2026";
 
   function unlockSite(animate) {
     document.body.classList.remove("is-locked");
-    lockScreen.classList.add("is-unlocked");
-    lockScreen.setAttribute("aria-hidden", "true");
+    if (lockScreen) {
+      lockScreen.classList.add("is-unlocked");
+      lockScreen.setAttribute("aria-hidden", "true");
+    }
     if (animate) {
       spawnHearts(lockCard, 18);
     }
   }
 
-  if (lockCfg && lockCfg.enabled) {
+  if (lockCfg && lockCfg.enabled && dayInput && monthInput && yearInput) {
     $("lock-badge-en").textContent = lockCfg.badgeEn;
     $("lock-badge-ar").textContent = lockCfg.badgeAr;
     $("lock-title").textContent = lockCfg.title;
     $("lock-subtitle-en").textContent = lockCfg.subtitleEn;
     $("lock-subtitle-ar").textContent = lockCfg.subtitleAr;
-    lockInput.placeholder = lockCfg.placeholder || "DD/M/YYYY";
     $("lock-submit").textContent = lockCfg.buttonText || "Unlock ♥";
-    $("lock-hint").textContent = lockCfg.hintText || "";
+    $("lock-hint").textContent = "Just type the numbers — no slashes needed";
+
+    // Auto-advance between Day -> Month -> Year without needing "/"
+    dayInput.addEventListener("input", () => {
+      dayInput.value = toDigits(dayInput.value).slice(0, 2);
+      if (dayInput.value.length === 2) monthInput.focus();
+    });
+
+    monthInput.addEventListener("input", () => {
+      monthInput.value = toDigits(monthInput.value).slice(0, 2);
+      if (
+        monthInput.value.length === 2 ||
+        (monthInput.value.length === 1 && Number(monthInput.value) > 1)
+      ) {
+        yearInput.focus();
+      }
+    });
+
+    yearInput.addEventListener("input", () => {
+      yearInput.value = toDigits(yearInput.value).slice(0, 4);
+    });
+
+    // Backspace moves back cleanly
+    monthInput.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !monthInput.value) dayInput.focus();
+    });
+    yearInput.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !yearInput.value) monthInput.focus();
+    });
 
     if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
       unlockSite(false);
     } else {
-      setTimeout(() => lockInput.focus(), 120);
+      setTimeout(() => dayInput.focus(), 120);
     }
 
     $("lock-form").addEventListener("submit", (e) => {
       e.preventDefault();
-      const normalized = normalizeDateInput(lockInput.value);
-      const digitsOnly = normalized.replace(/\D/g, "");
-      const accepted = lockCfg.acceptedNormalized || [];
+      const d = Number(toDigits(dayInput.value));
+      const m = Number(toDigits(monthInput.value));
+      const yRaw = toDigits(yearInput.value);
+      const y = yRaw.length === 2 ? Number(`20${yRaw}`) : Number(yRaw);
 
-      if (accepted.includes(normalized) || accepted.includes(digitsOnly)) {
+      if (d === 17 && m === 8 && y === 2026) {
         lockError.textContent = "";
         sessionStorage.setItem(UNLOCK_KEY, "1");
         unlockSite(true);
@@ -89,7 +117,8 @@
         lockCard.classList.remove("shake");
         void lockCard.offsetWidth;
         lockCard.classList.add("shake");
-        lockInput.select();
+        dayInput.focus();
+        dayInput.select();
       }
     });
   } else {
@@ -289,18 +318,20 @@
     spawnHearts(loveBtn, 10);
   });
 
-  // ================= SCROLL REVEAL =================
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.12 }
-  );
-
-  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  // ================= SAFE SCROLL REVEAL =================
+  if ("IntersectionObserver" in window) {
+    document.documentElement.classList.add("js-animate");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+  }
 })();

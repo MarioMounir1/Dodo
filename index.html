@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=3" />
   </head>
   <body class="is-locked">
     <!-- Subtle warm paper texture overlay -->
@@ -39,14 +39,40 @@
         <p id="lock-subtitle-ar" class="lock-subtitle-ar" dir="rtl" lang="ar"></p>
 
         <form id="lock-form" class="lock-form" autocomplete="off">
-          <input
-            id="lock-input"
-            class="lock-input"
-            type="text"
-            inputmode="text"
-            aria-label="Enter special date password"
-            required
-          />
+          <div class="date-inputs" dir="ltr">
+            <input
+              id="lock-day"
+              class="lock-input date-box date-box-sm"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="DD"
+              aria-label="Day"
+              required
+            />
+            <span class="date-slash" aria-hidden="true">/</span>
+            <input
+              id="lock-month"
+              class="lock-input date-box date-box-sm"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              placeholder="MM"
+              aria-label="Month"
+              required
+            />
+            <span class="date-slash" aria-hidden="true">/</span>
+            <input
+              id="lock-year"
+              class="lock-input date-box date-box-lg"
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              placeholder="YYYY"
+              aria-label="Year"
+              required
+            />
+          </div>
           <button id="lock-submit" class="btn-primary lock-submit" type="submit"></button>
         </form>
 
@@ -180,7 +206,7 @@
       </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="app.js"></script>
+    <script src="config.js?v=3"></script>
+    <script src="app.js?v=3"></script>
   </body>
 </html>
