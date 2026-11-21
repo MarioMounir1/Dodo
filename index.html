@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>For دودو — From Mario</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="is-locked">
+    <!-- Subtle warm paper texture overlay -->
+    <div class="paper-grain" aria-hidden="true"></div>
+
+    <!-- Floating petals / hearts layer for interactive taps -->
+    <div id="burst-layer" class="burst-layer" aria-hidden="true"></div>
+
+    <!-- PASSWORD LOCK OVERLAY -->
+    <div id="lock-screen" class="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+      <div class="lock-card" id="lock-card">
+        <div class="washi-tape washi-center washi-blush" aria-hidden="true"></div>
+
+        <div class="wax-seal lock-seal" aria-hidden="true">
+          <span>♥</span>
+        </div>
+
+        <div class="eyebrow-row lock-eyebrow">
+          <span id="lock-badge-en"></span>
+          <span class="eyebrow-dot" aria-hidden="true">•</span>
+          <span id="lock-badge-ar" class="eyebrow-ar" dir="rtl" lang="ar"></span>
+        </div>
+
+        <h1 id="lock-title" class="lock-title"></h1>
+        <p id="lock-subtitle-en" class="lock-subtitle-en"></p>
+        <p id="lock-subtitle-ar" class="lock-subtitle-ar" dir="rtl" lang="ar"></p>
+
+        <form id="lock-form" class="lock-form" autocomplete="off">
+          <input
+            id="lock-input"
+            class="lock-input"
+            type="text"
+            inputmode="text"
+            aria-label="Enter special date password"
+            required
+          />
+          <button id="lock-submit" class="btn-primary lock-submit" type="submit"></button>
+        </form>
+
+        <p id="lock-error" class="lock-error" role="alert" aria-live="polite"></p>
+        <p id="lock-hint" class="lock-hint"></p>
+      </div>
+    </div>
+
+    <main class="scrapbook" id="scrapbook-main">
+      <!-- HERO / COVER -->
+      <header class="hero reveal">
+        <div class="hero-copy">
+          <div class="eyebrow-row">
+            <span id="eyebrow-en" class="eyebrow"></span>
+            <span class="eyebrow-dot" aria-hidden="true">•</span>
+            <span id="eyebrow-ar" class="eyebrow-ar" dir="rtl" lang="ar"></span>
+          </div>
+
+          <h1 class="hero-title">
+            <span id="hero-title-text"></span>
+            <span id="hero-name" class="hero-name" dir="rtl" lang="ar"></span>
+          </h1>
+
+          <p id="hero-subtitle-ar" class="hero-subtitle-ar" dir="rtl" lang="ar"></p>
+          <p id="hero-intro" class="hero-intro"></p>
+
+          <div class="hero-actions">
+            <a href="#gallery" class="btn-primary">
+              <span>Open our memories</span>
+              <span class="btn-arrow" aria-hidden="true">↓</span>
+            </a>
+            <a href="#letter" class="btn-ghost">Read my letter</a>
+          </div>
+        </div>
+
+        <div class="hero-polaroid-wrap">
+          <figure class="polaroid polaroid-cover" id="cover-polaroid" tabindex="0" role="button" aria-label="View featured memory">
+            <div class="washi-tape washi-center washi-blush" aria-hidden="true"></div>
+            <div class="polaroid-frame" id="cover-frame"></div>
+            <figcaption class="polaroid-caption">
+              <span id="cover-caption-en" class="caption-hand"></span>
+              <span id="cover-caption-ar" class="caption-ar" dir="rtl" lang="ar"></span>
+              <span id="cover-date" class="caption-date"></span>
+            </figcaption>
+          </figure>
+        </div>
+      </header>
+
+      <!-- POLAROID PHOTO GALLERY -->
+      <section id="gallery" class="section gallery-section">
+        <div class="section-header reveal">
+          <p class="section-kicker">01 / Polaroids</p>
+          <h2 id="gallery-heading" class="section-title"></h2>
+          <p id="gallery-subheading-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
+          <p class="section-hint">Tap any Polaroid to read the memory behind it</p>
+        </div>
+
+        <div id="polaroid-grid" class="polaroid-grid" aria-label="Polaroid photo gallery"></div>
+      </section>
+
+      <!-- VIDEO MEMORY -->
+      <section id="video-section" class="section video-section reveal">
+        <div class="section-header">
+          <p id="video-kicker" class="section-kicker"></p>
+          <h2 id="video-title" class="section-title"></h2>
+          <p id="video-title-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
+        </div>
+
+        <figure class="polaroid polaroid-video">
+          <div class="washi-tape washi-center washi-cream" aria-hidden="true"></div>
+          <div class="video-frame">
+            <video id="memory-video" controls playsinline preload="metadata"></video>
+          </div>
+          <figcaption class="polaroid-caption">
+            <span id="video-caption-en" class="caption-hand"></span>
+            <span id="video-caption-ar" class="caption-ar" dir="rtl" lang="ar"></span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- HANDWRITTEN LOVE LETTER -->
+      <section id="letter" class="section letter-section reveal">
+        <div class="section-header">
+          <p id="letter-eyebrow" class="section-kicker"></p>
+          <h2 id="letter-title" class="section-title"></h2>
+          <p id="letter-title-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
+        </div>
+
+        <article class="letter-paper">
+          <div class="washi-tape washi-corner-left washi-cream" aria-hidden="true"></div>
+          <div class="washi-tape washi-corner-right washi-sage" aria-hidden="true"></div>
+
+          <p id="letter-greeting" class="letter-greeting"></p>
+          <div id="letter-body" class="letter-body"></div>
+
+          <div class="letter-footer">
+            <div class="letter-closing-block">
+              <p id="letter-closing-en" class="letter-closing"></p>
+              <p id="letter-closing-ar" class="letter-closing-ar" dir="rtl" lang="ar"></p>
+              <p class="letter-signature">
+                <span id="signature-en"></span>
+                <span class="sig-sep">—</span>
+                <span id="signature-ar" dir="rtl" lang="ar"></span>
+              </p>
+            </div>
+            <div class="wax-seal" aria-hidden="true" title="Sealed with love">
+              <span>♥</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- INTERACTIVE CLOSING -->
+      <footer class="ending reveal">
+        <button id="love-btn" class="love-btn" type="button">
+          <span class="love-btn-heart" aria-hidden="true">♥</span>
+          <span id="love-btn-text"></span>
+        </button>
+        <p id="love-toast" class="love-toast" aria-live="polite"></p>
+        <p class="ending-note">
+          Made with all my love by <span id="footer-from"></span> for <span id="footer-name"></span>
+        </p>
+      </footer>
+    </main>
+
+    <!-- POLAROID LIGHTBOX MODAL -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lb-caption-en">
+      <div class="lightbox-backdrop" data-close="true"></div>
+      <div class="lightbox-card">
+        <button class="lightbox-close" type="button" aria-label="Close memory" data-close="true">×</button>
+
+        <div class="lightbox-polaroid">
+          <div id="lb-frame" class="polaroid-frame lightbox-frame"></div>
+          <div class="lightbox-meta">
+            <span id="lb-date" class="caption-date"></span>
+            <h3 id="lb-caption-en" class="caption-hand lightbox-title"></h3>
+            <p id="lb-caption-ar" class="caption-ar lightbox-title-ar" dir="rtl" lang="ar"></p>
+          </div>
+        </div>
+
+        <div class="lightbox-story">
+          <p id="lb-story-en" class="story-en"></p>
+          <p id="lb-story-ar" class="story-ar" dir="rtl" lang="ar"></p>
+
+          <div class="lightbox-nav">
+            <button id="lb-prev" class="nav-pill" type="button">← Previous</button>
+            <span id="lb-counter" class="lb-counter"></span>
+            <button id="lb-next" class="nav-pill" type="button">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
