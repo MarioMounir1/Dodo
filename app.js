@@ -745,7 +745,7 @@
   const notesCfg = cfg.notesSection;
   $("notes-kicker").textContent = notesCfg.kicker;
   $("notes-title").textContent = notesCfg.title;
-  $("notes-title-ar").textContent = notesCfg.titleAr;
+  if ($("notes-title-ar")) $("notes-title-ar").textContent = notesCfg.titleAr;
   $("notes-hint").textContent = notesCfg.hint;
   $("note-input").placeholder = notesCfg.placeholder;
 

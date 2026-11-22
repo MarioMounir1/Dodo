@@ -195,7 +195,7 @@ window.SCRAPBOOK_CONFIG = {
   notesSection: {
     kicker: "03 / Our Notes Wall",
     title: "Leave a Note Anytime",
-    titleAr: "اكتبوا أي حاجة لبعض هنا",
+    titleAr: "",
     hint: "Sweet messages, random thoughts, inside jokes, or little reminders ♥",
     placeholder: "Write something sweet in English or Arabic... اكتبوا أي حاجة هنا ♥",
     emptyText: "No notes pinned yet — be the first to leave one ♥",
