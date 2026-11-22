@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body class="is-locked">
     <!-- Subtle warm paper texture overlay -->
@@ -104,6 +104,7 @@
               <span>Open our memories</span>
               <span class="btn-arrow" aria-hidden="true">↓</span>
             </a>
+            <a href="#notes" class="btn-ghost">Write a note ✎</a>
             <a href="#letter" class="btn-ghost">Read my letter</a>
           </div>
         </div>
@@ -128,9 +129,54 @@
           <h2 id="gallery-heading" class="section-title"></h2>
           <p id="gallery-subheading-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
           <p class="section-hint">Tap any Polaroid to read the memory behind it</p>
+
+          <div class="gallery-toolbar">
+            <button id="open-add-memory-btn" class="btn-primary btn-add-memory" type="button">
+              <span>+ Add a Memory</span>
+              <span class="btn-ar-tag" dir="rtl" lang="ar">ضيفي صورة وذكرى</span>
+            </button>
+            <span id="sync-status" class="sync-badge" title="Storage status"></span>
+          </div>
         </div>
 
         <div id="polaroid-grid" class="polaroid-grid" aria-label="Polaroid photo gallery"></div>
+      </section>
+
+      <!-- SHARED NOTES WALL -->
+      <section id="notes" class="section notes-section reveal">
+        <div class="section-header">
+          <p id="notes-kicker" class="section-kicker"></p>
+          <h2 id="notes-title" class="section-title"></h2>
+          <p id="notes-title-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
+          <p id="notes-hint" class="section-hint"></p>
+        </div>
+
+        <form id="note-form" class="note-composer">
+          <div class="washi-tape washi-center washi-sage" aria-hidden="true"></div>
+
+          <div class="composer-top">
+            <span class="composer-label">Writing as:</span>
+            <div class="author-toggle" role="radiogroup" aria-label="Who is writing">
+              <button type="button" class="author-pill is-active" data-author="دودو">دودو ♥</button>
+              <button type="button" class="author-pill" data-author="Mario">Mario ♥</button>
+            </div>
+          </div>
+
+          <textarea
+            id="note-input"
+            class="note-textarea"
+            rows="3"
+            dir="auto"
+            required
+          ></textarea>
+
+          <div class="composer-footer">
+            <span id="note-status" class="composer-status" aria-live="polite"></span>
+            <button id="note-submit-btn" class="btn-primary" type="submit">Pin Note ♥</button>
+          </div>
+        </form>
+
+        <div id="notes-wall" class="notes-wall" aria-label="Pinned notes"></div>
       </section>
 
       <!-- HANDWRITTEN LOVE LETTER -->
@@ -188,14 +234,19 @@
           <div id="lb-frame" class="polaroid-frame lightbox-frame"></div>
           <div class="lightbox-meta">
             <span id="lb-date" class="caption-date"></span>
-            <h3 id="lb-caption-en" class="caption-hand lightbox-title"></h3>
+            <h3 id="lb-caption-en" class="caption-hand lightbox-title" dir="auto"></h3>
             <p id="lb-caption-ar" class="caption-ar lightbox-title-ar" dir="rtl" lang="ar"></p>
           </div>
         </div>
 
         <div class="lightbox-story">
-          <p id="lb-story-en" class="story-en"></p>
+          <span id="lb-author-tag" class="lb-author-tag" hidden></span>
+          <p id="lb-story-en" class="story-en" dir="auto"></p>
           <p id="lb-story-ar" class="story-ar" dir="rtl" lang="ar"></p>
+
+          <button id="lb-delete" class="btn-delete-memory" type="button" hidden>
+            Remove this memory
+          </button>
 
           <div class="lightbox-nav">
             <button id="lb-prev" class="nav-pill" type="button">← Previous</button>
@@ -206,7 +257,86 @@
       </div>
     </div>
 
-    <script src="config.js?v=3"></script>
-    <script src="app.js?v=3"></script>
+    <!-- ADD MEMORY MODAL -->
+    <div id="add-memory-modal" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="add-memory-title">
+      <div class="lightbox-backdrop" data-close-add="true"></div>
+      <div class="add-modal-card">
+        <button class="lightbox-close" type="button" aria-label="Close" data-close-add="true">×</button>
+
+        <h3 id="add-memory-title" class="add-modal-title">Add a New Memory ♥</h3>
+        <p class="add-modal-sub" dir="rtl" lang="ar">ضيفي صورة واكتبي الذكرى بتاعتها هنا</p>
+
+        <form id="add-memory-form" class="add-memory-form">
+          <label class="photo-dropzone" for="memory-photo-input" id="photo-dropzone">
+            <input id="memory-photo-input" type="file" accept="image/*" hidden />
+            <img id="memory-photo-preview" class="photo-preview" alt="Selected memory preview" hidden />
+            <div id="photo-dropzone-empty" class="dropzone-empty">
+              <span class="dropzone-icon" aria-hidden="true">📷</span>
+              <span class="dropzone-text">Tap to choose a photo</span>
+              <span class="dropzone-ar" dir="rtl" lang="ar">اختاري صورة من موبايلك أو جهازك</span>
+            </div>
+          </label>
+
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label" for="memory-author">Added by</label>
+              <select id="memory-author" class="field-input">
+                <option value="دودو">دودو ♥</option>
+                <option value="Mario">Mario ♥</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="memory-date">Date / Tag</label>
+              <input id="memory-date" class="field-input" type="text" placeholder="e.g. Today" dir="auto" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="memory-caption">Short caption (on the Polaroid)</label>
+            <input
+              id="memory-caption"
+              class="field-input"
+              type="text"
+              placeholder="e.g. My favorite day with you ♥"
+              dir="auto"
+              required
+            />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="memory-story">Write anything about this memory</label>
+            <textarea
+              id="memory-story"
+              class="field-input field-textarea"
+              rows="3"
+              placeholder="Write the story behind this photo (English or Arabic)..."
+              dir="auto"
+            ></textarea>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Washi tape color</span>
+            <div class="tape-picker" role="radiogroup" aria-label="Tape color">
+              <button type="button" class="tape-choice is-active" data-tape="blush">Blush</button>
+              <button type="button" class="tape-choice" data-tape="cream">Cream</button>
+              <button type="button" class="tape-choice" data-tape="sage">Sage</button>
+            </div>
+          </div>
+
+          <p id="add-memory-error" class="lock-error" role="alert" aria-live="polite"></p>
+
+          <button id="save-memory-btn" class="btn-primary add-submit-btn" type="submit">
+            Add to Our Scrapbook ♥
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Firebase Compat SDK (only activated if firebase.enabled = true in config.js) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script src="config.js?v=4"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>

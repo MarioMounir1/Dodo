@@ -65,9 +65,8 @@
     $("lock-subtitle-en").textContent = lockCfg.subtitleEn;
     $("lock-subtitle-ar").textContent = lockCfg.subtitleAr;
     $("lock-submit").textContent = lockCfg.buttonText || "Unlock ♥";
-    $("lock-hint").textContent = "Just type the numbers — no slashes needed";
+    $("lock-hint").textContent = lockCfg.hintText || "Just type the numbers — no slashes needed";
 
-    // Auto-advance between Day -> Month -> Year without needing "/"
     dayInput.addEventListener("input", () => {
       dayInput.value = toDigits(dayInput.value).slice(0, 2);
       if (dayInput.value.length === 2) monthInput.focus();
@@ -87,7 +86,6 @@
       yearInput.value = toDigits(yearInput.value).slice(0, 4);
     });
 
-    // Backspace moves back cleanly
     monthInput.addEventListener("keydown", (e) => {
       if (e.key === "Backspace" && !monthInput.value) dayInput.focus();
     });
@@ -125,6 +123,94 @@
     unlockSite(false);
   }
 
+  // ================= STORAGE (FIREBASE LIVE SYNC + LOCAL FALLBACK) =================
+  const LOCAL_MEMORIES_KEY = "dodo_mario_memories_v1";
+  const LOCAL_NOTES_KEY = "dodo_mario_notes_v1";
+
+  let db = null;
+  const syncStatusEl = $("sync-status");
+
+  const fbCfg = cfg.firebase;
+  if (
+    fbCfg &&
+    fbCfg.enabled &&
+    fbCfg.config &&
+    fbCfg.config.projectId &&
+    typeof window.firebase !== "undefined"
+  ) {
+    try {
+      if (!window.firebase.apps.length) {
+        window.firebase.initializeApp(fbCfg.config);
+      }
+      db = window.firebase.firestore();
+      if (syncStatusEl) {
+        syncStatusEl.textContent = "● Synced live between Mario & دودو";
+        syncStatusEl.classList.add("is-live");
+      }
+    } catch (err) {
+      console.warn("Firebase init failed, using local storage:", err);
+      db = null;
+    }
+  }
+
+  if (!db && syncStatusEl) {
+    syncStatusEl.textContent = "Saved on this device (connect Firebase in config.js for live sync)";
+  }
+
+  function readLocal(key) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function writeLocal(key, list) {
+    localStorage.setItem(key, JSON.stringify(list));
+  }
+
+  // Compress uploaded photo cleanly via <canvas> so it's fast & fits in Firestore
+  function compressImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read image"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Invalid image file"));
+        img.onload = () => {
+          const MAX_SIDE = 1080;
+          let { width, height } = img;
+          if (width > MAX_SIDE || height > MAX_SIDE) {
+            if (width >= height) {
+              height = Math.round((height * MAX_SIDE) / width);
+              width = MAX_SIDE;
+            } else {
+              width = Math.round((width * MAX_SIDE) / height);
+              height = MAX_SIDE;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          let quality = 0.78;
+          let dataUrl = canvas.toDataURL("image/jpeg", quality);
+          // Ensure under ~650 KB for fast Firestore saves
+          while (dataUrl.length > 680000 && quality > 0.4) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL("image/jpeg", quality);
+          }
+          resolve(dataUrl);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   // ================= HERO & META =================
   document.title = `For ${cfg.herName} — From ${cfg.yourName}`;
   $("eyebrow-en").textContent = cfg.eyebrow;
@@ -136,7 +222,6 @@
   $("footer-from").textContent = cfg.yourName;
   $("footer-name").textContent = cfg.herName;
 
-  // Helper: renders an <img> and gracefully falls back to a warm placeholder card
   function populatePhotoFrame(container, photo) {
     container.innerHTML = "";
     container.classList.toggle("is-contain", photo.fit === "contain");
@@ -154,7 +239,6 @@
       ph.innerHTML = `
         <span class="ph-icon" aria-hidden="true">♥</span>
         <span class="ph-label">${photo.caption || "Our photo goes here"}</span>
-        <span class="ph-path">${photo.src}</span>
       `;
       container.appendChild(ph);
     });
@@ -178,50 +262,382 @@
     }
   });
 
-  // ================= POLAROID GALLERY =================
+  // ================= POLAROID GALLERY (STATIC + DYNAMIC) =================
   $("gallery-heading").textContent = cfg.galleryHeading;
   $("gallery-subheading-ar").textContent = cfg.gallerySubheadingAr;
 
   const grid = $("polaroid-grid");
-  cfg.photos.forEach((photo, index) => {
-    const figure = document.createElement("figure");
-    figure.className = "polaroid reveal";
-    figure.style.setProperty("--tilt", `${photo.tilt || 0}deg`);
-    figure.tabIndex = 0;
-    figure.setAttribute("role", "button");
-    figure.setAttribute("aria-label", `Open memory: ${photo.caption}`);
+  let dynamicMemories = [];
+  let allPhotos = [...cfg.photos];
 
-    const tape = document.createElement("div");
-    tape.className = `washi-tape washi-${photo.tape || "cream"}`;
-    tape.setAttribute("aria-hidden", "true");
+  function renderGallery() {
+    allPhotos = [...cfg.photos, ...dynamicMemories];
+    grid.innerHTML = "";
 
-    const frame = document.createElement("div");
-    frame.className = "polaroid-frame";
-    populatePhotoFrame(frame, photo);
+    allPhotos.forEach((photo, index) => {
+      const figure = document.createElement("figure");
+      figure.className = "polaroid";
+      figure.style.setProperty("--tilt", `${photo.tilt || 0}deg`);
+      figure.tabIndex = 0;
+      figure.setAttribute("role", "button");
+      figure.setAttribute("aria-label", `Open memory: ${photo.caption}`);
 
-    const caption = document.createElement("figcaption");
-    caption.className = "polaroid-caption";
-    caption.innerHTML = `
-      <span class="caption-hand"></span>
-      <span class="caption-ar" dir="rtl" lang="ar"></span>
-      <span class="caption-date"></span>
-    `;
-    caption.querySelector(".caption-hand").textContent = photo.caption;
-    caption.querySelector(".caption-ar").textContent = photo.captionAr || "";
-    caption.querySelector(".caption-date").textContent = photo.date || "";
+      const tape = document.createElement("div");
+      tape.className = `washi-tape washi-${photo.tape || "cream"}`;
+      tape.setAttribute("aria-hidden", "true");
 
-    figure.append(tape, frame, caption);
+      const frame = document.createElement("div");
+      frame.className = "polaroid-frame";
+      populatePhotoFrame(frame, photo);
 
-    const openThis = () => openLightbox(index);
-    figure.addEventListener("click", openThis);
-    figure.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        openThis();
+      if (photo.addedBy) {
+        const badge = document.createElement("span");
+        badge.className = "polaroid-author-pill";
+        badge.textContent = `By ${photo.addedBy} ♥`;
+        figure.appendChild(badge);
       }
-    });
 
-    grid.appendChild(figure);
+      const caption = document.createElement("figcaption");
+      caption.className = "polaroid-caption";
+      caption.innerHTML = `
+        <span class="caption-hand" dir="auto"></span>
+        <span class="caption-ar" dir="rtl" lang="ar"></span>
+        <span class="caption-date"></span>
+      `;
+      caption.querySelector(".caption-hand").textContent = photo.caption || "";
+      caption.querySelector(".caption-ar").textContent = photo.captionAr || "";
+      caption.querySelector(".caption-date").textContent = photo.date || "";
+
+      figure.append(tape, frame, caption);
+
+      const openThis = () => openLightbox(index);
+      figure.addEventListener("click", openThis);
+      figure.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openThis();
+        }
+      });
+
+      grid.appendChild(figure);
+    });
+  }
+
+  async function saveNewMemory(memoryObj) {
+    if (db) {
+      await db.collection("memories").add(memoryObj);
+    } else {
+      const next = [
+        ...readLocal(LOCAL_MEMORIES_KEY),
+        { ...memoryObj, id: `local_${Date.now()}` },
+      ];
+      writeLocal(LOCAL_MEMORIES_KEY, next);
+      dynamicMemories = next;
+      renderGallery();
+    }
+  }
+
+  async function deleteMemoryById(id) {
+    if (!id) return;
+    if (db) {
+      await db.collection("memories").doc(id).delete();
+    } else {
+      const next = readLocal(LOCAL_MEMORIES_KEY).filter((m) => m.id !== id);
+      writeLocal(LOCAL_MEMORIES_KEY, next);
+      dynamicMemories = next;
+      renderGallery();
+    }
+  }
+
+  if (db) {
+    db.collection("memories")
+      .orderBy("createdAt", "asc")
+      .onSnapshot(
+        (snapshot) => {
+          dynamicMemories = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            isUserAdded: true,
+            ...doc.data(),
+          }));
+          renderGallery();
+        },
+        (err) => {
+          console.warn("Memories sync error:", err);
+          dynamicMemories = readLocal(LOCAL_MEMORIES_KEY).map((m) => ({
+            ...m,
+            isUserAdded: true,
+          }));
+          renderGallery();
+        }
+      );
+  } else {
+    dynamicMemories = readLocal(LOCAL_MEMORIES_KEY).map((m) => ({
+      ...m,
+      isUserAdded: true,
+    }));
+    renderGallery();
+  }
+
+  // ================= ADD MEMORY MODAL =================
+  const addModal = $("add-memory-modal");
+  const addForm = $("add-memory-form");
+  const photoInput = $("memory-photo-input");
+  const photoPreview = $("memory-photo-preview");
+  const dropzoneEmpty = $("photo-dropzone-empty");
+  const addError = $("add-memory-error");
+  const saveMemoryBtn = $("save-memory-btn");
+  let selectedPhotoDataUrl = "";
+  let selectedTape = "blush";
+
+  function openAddModal() {
+    addModal.classList.add("is-open");
+    addModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeAddModal() {
+    addModal.classList.remove("is-open");
+    addModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  $("open-add-memory-btn").addEventListener("click", openAddModal);
+  addModal.addEventListener("click", (e) => {
+    if (e.target.dataset.closeAdd === "true") closeAddModal();
+  });
+
+  document.querySelectorAll(".tape-choice").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tape-choice").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      selectedTape = btn.dataset.tape;
+    });
+  });
+
+  photoInput.addEventListener("change", async () => {
+    const file = photoInput.files && photoInput.files[0];
+    if (!file) return;
+    addError.textContent = "";
+    try {
+      selectedPhotoDataUrl = await compressImageFile(file);
+      photoPreview.src = selectedPhotoDataUrl;
+      photoPreview.hidden = false;
+      dropzoneEmpty.hidden = true;
+    } catch (err) {
+      addError.textContent = "Could not load that photo. Please try another image.";
+    }
+  });
+
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const caption = $("memory-caption").value.trim();
+    const story = $("memory-story").value.trim();
+    const date = $("memory-date").value.trim() || new Date().toLocaleDateString();
+    const addedBy = $("memory-author").value;
+
+    if (!selectedPhotoDataUrl) {
+      addError.textContent = "Please choose a photo first ♥ — اختاري صورة الأول";
+      return;
+    }
+    if (!caption) {
+      addError.textContent = "Please add a short caption ♥";
+      return;
+    }
+
+    addError.textContent = "";
+    saveMemoryBtn.disabled = true;
+    saveMemoryBtn.textContent = "Saving...";
+
+    try {
+      const tilts = [-2.6, 2.2, -1.8, 2.7, -2.1, 1.9];
+      await saveNewMemory({
+        src: selectedPhotoDataUrl,
+        caption,
+        captionAr: "",
+        story,
+        storyAr: "",
+        date,
+        addedBy,
+        tape: selectedTape,
+        tilt: tilts[Math.floor(Math.random() * tilts.length)],
+        isUserAdded: true,
+        createdAt: Date.now(),
+      });
+
+      addForm.reset();
+      selectedPhotoDataUrl = "";
+      photoPreview.hidden = true;
+      photoPreview.src = "";
+      dropzoneEmpty.hidden = false;
+      closeAddModal();
+      spawnHearts($("open-add-memory-btn"), 14);
+    } catch (err) {
+      console.error(err);
+      addError.textContent = "Could not save memory. Check your connection or Firebase rules.";
+    } finally {
+      saveMemoryBtn.disabled = false;
+      saveMemoryBtn.textContent = "Add to Our Scrapbook ♥";
+    }
+  });
+
+  // ================= SHARED NOTES WALL =================
+  const notesCfg = cfg.notesSection;
+  $("notes-kicker").textContent = notesCfg.kicker;
+  $("notes-title").textContent = notesCfg.title;
+  $("notes-title-ar").textContent = notesCfg.titleAr;
+  $("notes-hint").textContent = notesCfg.hint;
+  $("note-input").placeholder = notesCfg.placeholder;
+
+  const notesWall = $("notes-wall");
+  const noteStatus = $("note-status");
+  let noteAuthor = "دودو";
+  let notesList = [];
+
+  document.querySelectorAll(".author-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".author-pill").forEach((p) => p.classList.remove("is-active"));
+      pill.classList.add("is-active");
+      noteAuthor = pill.dataset.author;
+    });
+  });
+
+  function formatNoteDate(ts) {
+    try {
+      return new Date(ts).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  }
+
+  function renderNotes() {
+    notesWall.innerHTML = "";
+    if (!notesList.length) {
+      const empty = document.createElement("p");
+      empty.className = "notes-empty";
+      empty.textContent = notesCfg.emptyText;
+      notesWall.appendChild(empty);
+      return;
+    }
+
+    const styles = ["blush", "cream", "sage"];
+    const tilts = [-1.8, 1.4, -1.1, 1.9, -1.5, 1.2];
+
+    notesList.forEach((note, idx) => {
+      const card = document.createElement("article");
+      const tone = styles[idx % styles.length];
+      card.className = `note-card note-card-${tone}`;
+      card.style.setProperty("--tilt", `${tilts[idx % tilts.length]}deg`);
+
+      const tape = document.createElement("div");
+      tape.className = `washi-tape washi-center washi-${tone}`;
+      tape.setAttribute("aria-hidden", "true");
+
+      const text = document.createElement("p");
+      text.className = "note-text";
+      text.dir = "auto";
+      text.textContent = note.text;
+
+      const meta = document.createElement("div");
+      meta.className = "note-meta";
+
+      const left = document.createElement("span");
+      left.innerHTML = `<span class="note-author"></span> · <span class="note-time"></span>`;
+      left.querySelector(".note-author").textContent = `From ${note.author} ♥`;
+      left.querySelector(".note-time").textContent = formatNoteDate(note.createdAt);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "note-delete";
+      delBtn.type = "button";
+      delBtn.title = "Delete note";
+      delBtn.setAttribute("aria-label", "Delete note");
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", async () => {
+        if (confirm("Remove this note?")) {
+          await deleteNoteById(note.id);
+        }
+      });
+
+      meta.append(left, delBtn);
+      card.append(tape, text, meta);
+      notesWall.appendChild(card);
+    });
+  }
+
+  async function saveNewNote(noteObj) {
+    if (db) {
+      await db.collection("notes").add(noteObj);
+    } else {
+      const next = [{ ...noteObj, id: `note_${Date.now()}` }, ...readLocal(LOCAL_NOTES_KEY)];
+      writeLocal(LOCAL_NOTES_KEY, next);
+      notesList = next;
+      renderNotes();
+    }
+  }
+
+  async function deleteNoteById(id) {
+    if (!id) return;
+    if (db) {
+      await db.collection("notes").doc(id).delete();
+    } else {
+      const next = readLocal(LOCAL_NOTES_KEY).filter((n) => n.id !== id);
+      writeLocal(LOCAL_NOTES_KEY, next);
+      notesList = next;
+      renderNotes();
+    }
+  }
+
+  if (db) {
+    db.collection("notes")
+      .orderBy("createdAt", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          notesList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          renderNotes();
+        },
+        (err) => {
+          console.warn("Notes sync error:", err);
+          notesList = readLocal(LOCAL_NOTES_KEY);
+          renderNotes();
+        }
+      );
+  } else {
+    notesList = readLocal(LOCAL_NOTES_KEY);
+    renderNotes();
+  }
+
+  $("note-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = $("note-input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const btn = $("note-submit-btn");
+    btn.disabled = true;
+    noteStatus.textContent = "Pinning...";
+
+    try {
+      await saveNewNote({
+        author: noteAuthor,
+        text,
+        createdAt: Date.now(),
+      });
+      input.value = "";
+      noteStatus.textContent = "Pinned to our wall ♥";
+      spawnHearts(btn, 10);
+      setTimeout(() => {
+        noteStatus.textContent = "";
+      }, 2500);
+    } catch (err) {
+      console.error(err);
+      noteStatus.textContent = "Could not save note right now.";
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   // ================= HANDWRITTEN LOVE LETTER =================
@@ -259,10 +675,12 @@
 
   // ================= LIGHTBOX MODAL =================
   const lightbox = $("lightbox");
+  const lbAuthorTag = $("lb-author-tag");
+  const lbDeleteBtn = $("lb-delete");
   let activeIndex = 0;
 
   function renderLightbox() {
-    const photo = cfg.photos[activeIndex];
+    const photo = allPhotos[activeIndex];
     if (!photo) return;
     populatePhotoFrame($("lb-frame"), photo);
     $("lb-date").textContent = photo.date || "";
@@ -270,7 +688,16 @@
     $("lb-caption-ar").textContent = photo.captionAr || "";
     $("lb-story-en").textContent = photo.story || "";
     $("lb-story-ar").textContent = photo.storyAr || "";
-    $("lb-counter").textContent = `${activeIndex + 1} / ${cfg.photos.length}`;
+    $("lb-counter").textContent = `${activeIndex + 1} / ${allPhotos.length}`;
+
+    if (photo.addedBy) {
+      lbAuthorTag.textContent = `Added by ${photo.addedBy} ♥`;
+      lbAuthorTag.hidden = false;
+    } else {
+      lbAuthorTag.hidden = true;
+    }
+
+    lbDeleteBtn.hidden = !(photo.isUserAdded && photo.id);
   }
 
   function openLightbox(index) {
@@ -288,7 +715,8 @@
   }
 
   function stepLightbox(delta) {
-    activeIndex = (activeIndex + delta + cfg.photos.length) % cfg.photos.length;
+    if (!allPhotos.length) return;
+    activeIndex = (activeIndex + delta + allPhotos.length) % allPhotos.length;
     renderLightbox();
   }
 
@@ -298,7 +726,19 @@
   $("lb-prev").addEventListener("click", () => stepLightbox(-1));
   $("lb-next").addEventListener("click", () => stepLightbox(1));
 
+  lbDeleteBtn.addEventListener("click", async () => {
+    const photo = allPhotos[activeIndex];
+    if (!photo || !photo.id) return;
+    if (!confirm("Remove this memory from the scrapbook?")) return;
+    await deleteMemoryById(photo.id);
+    closeLightbox();
+  });
+
   document.addEventListener("keydown", (e) => {
+    if (addModal.classList.contains("is-open") && e.key === "Escape") {
+      closeAddModal();
+      return;
+    }
     if (!lightbox.classList.contains("is-open")) return;
     if (e.key === "Escape") closeLightbox();
     if (e.key === "ArrowLeft") stepLightbox(-1);

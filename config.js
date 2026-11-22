@@ -12,10 +12,26 @@ window.SCRAPBOOK_CONFIG = {
   yourName: "Mario",
   yourNameAr: "ماريو",
 
+  // ============================================================
+  //  LIVE CLOUD SYNC (Firebase Firestore — 100% Free, No Card)
+  //  Paste your Firebase web config below and set enabled: true
+  //  so everything دودو adds on her phone appears on yours too!
+  // ============================================================
+  firebase: {
+    enabled: false,
+    config: {
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: "",
+    },
+  },
+
   // Password Lock Screen (Day you started talking: 17/8/2026)
   lockScreen: {
     enabled: true,
-    // Normalized digits accepted: 17/8/2026, 17/08/2026, 17-8-2026, ١٧/٨/٢٠٢٦, etc.
     acceptedNormalized: ["17/8/2026", "17/08/2026", "1782026", "17082026"],
     badgeEn: "Private scrapbook",
     badgeAr: "لدودو وبس",
@@ -25,7 +41,7 @@ window.SCRAPBOOK_CONFIG = {
     placeholder: "DD/M/YYYY",
     buttonText: "Unlock ♥",
     wrongMessage: "Almost! Think of the day our story started ♥ — حاولي تاني يا دودو",
-    hintText: "Hint: our very first day (DD/M/YYYY)",
+    hintText: "Just type the numbers — no slashes needed",
   },
 
   // Small top eyebrow badge
@@ -36,7 +52,7 @@ window.SCRAPBOOK_CONFIG = {
   heroTitle: "To my favorite person in the whole world,",
   heroSubtitleAr: "يا أحلى وأغلى حاجة جاتلي في حياتي",
   heroIntro:
-    "I put together our favorite moments, your sweetest words, and everything I love about you. Scroll slowly, tap any Polaroid to read the memory behind it.",
+    "I put together our favorite moments, your sweetest words, and everything I love about you. You can also add your own photos, memories, and notes anytime!",
 
   // Featured cover Polaroid in the hero section
   coverPhoto: {
@@ -155,9 +171,19 @@ window.SCRAPBOOK_CONFIG = {
     },
   ],
 
+  // Shared Notes Wall (دودو & Mario can type anything here!)
+  notesSection: {
+    kicker: "02 / Our Notes Wall",
+    title: "Write Anything Here",
+    titleAr: "اكتبي أي حاجة في قلبك هنا يا دودو",
+    hint: "Leave a sweet note, a random thought, or a message for each other anytime ♥",
+    placeholder: "Write something sweet in English or Arabic... اكتبي أي حاجة هنا ♥",
+    emptyText: "No notes pinned yet — be the first to write something sweet ♥",
+  },
+
   // Handwritten Love Letter section
   letter: {
-    eyebrow: "02 / From Mario's Heart",
+    eyebrow: "03 / From Mario's Heart",
     title: "For you, دودو",
     titleAr: "كلام من قلبي ليكي",
     greeting: "My dearest دودو,",
