@@ -18,14 +18,15 @@ window.SCRAPBOOK_CONFIG = {
   //  so everything دودو adds on her phone appears on yours too!
   // ============================================================
   firebase: {
-    enabled: false,
+    enabled: true,
     config: {
-      apiKey: "",
-      authDomain: "",
-      projectId: "",
-      storageBucket: "",
-      messagingSenderId: "",
-      appId: "",
+      apiKey: "AIzaSyAwoiwsW-iE23cBFd3piyfK1BRvscx8krk",
+      authDomain: "dodo-33f1d.firebaseapp.com",
+      projectId: "dodo-33f1d",
+      storageBucket: "dodo-33f1d.firebasestorage.app",
+      messagingSenderId: "661090486817",
+      appId: "1:661090486817:web:0101afeb8578586392b160",
+      measurementId: "G-WTW02JE264",
     },
   },
 
