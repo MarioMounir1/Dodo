@@ -47,6 +47,26 @@
   const lockError = $("lock-error");
   const UNLOCK_KEY = "dodo_mario_unlocked_17_8_2026";
 
+  // ================= PERIODIC CUTE LOVE WHISPER =================
+  const loveWhisper = $("love-whisper");
+  let whisperStarted = false;
+
+  function showLoveWhisper() {
+    if (!loveWhisper || document.body.classList.contains("is-locked")) return;
+    loveWhisper.classList.add("is-showing");
+    loveWhisper.setAttribute("aria-hidden", "false");
+    setTimeout(() => {
+      loveWhisper.classList.remove("is-showing");
+      loveWhisper.setAttribute("aria-hidden", "true");
+    }, 4500);
+  }
+
+  function startLoveWhisperLoop() {
+    if (whisperStarted) return;
+    whisperStarted = true;
+    setInterval(showLoveWhisper, 30000);
+  }
+
   function unlockSite(animate) {
     document.body.classList.remove("is-locked");
     if (lockScreen) {
@@ -56,6 +76,7 @@
     if (animate) {
       spawnHearts(lockCard, 18);
     }
+    startLoveWhisperLoop();
   }
 
   if (lockCfg && lockCfg.enabled && dayInput && monthInput && yearInput) {
