@@ -64,7 +64,7 @@
     $("lock-title").textContent = lockCfg.title;
     $("lock-subtitle-en").textContent = lockCfg.subtitleEn;
     $("lock-subtitle-ar").textContent = lockCfg.subtitleAr;
-    $("lock-submit").textContent = lockCfg.buttonText || "Unlock ♥";
+    $("lock-submit").textContent = lockCfg.buttonText || "Enter Our Space ♥";
     $("lock-hint").textContent = lockCfg.hintText || "Just type the numbers — no slashes needed";
 
     dayInput.addEventListener("input", () => {
@@ -123,9 +123,29 @@
     unlockSite(false);
   }
 
+  // ================= LIVE TOGETHER COUNTER =================
+  const startDateMs = new Date(cfg.startDateISO || "2026-08-17T00:00:00").getTime();
+  function updateTogetherCounter() {
+    const diff = Math.max(0, Date.now() - startDateMs);
+    const totalSecs = Math.floor(diff / 1000);
+    const days = Math.floor(totalSecs / 86400);
+    const hours = Math.floor((totalSecs % 86400) / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+
+    $("cnt-days").textContent = String(days);
+    $("cnt-hours").textContent = String(hours).padStart(2, "0");
+    $("cnt-mins").textContent = String(mins).padStart(2, "0");
+    $("cnt-secs").textContent = String(secs).padStart(2, "0");
+  }
+  updateTogetherCounter();
+  setInterval(updateTogetherCounter, 1000);
+
   // ================= STORAGE (FIREBASE LIVE SYNC + LOCAL FALLBACK) =================
   const LOCAL_MEMORIES_KEY = "dodo_mario_memories_v1";
   const LOCAL_NOTES_KEY = "dodo_mario_notes_v1";
+  const LOCAL_BUCKET_KEY = "dodo_mario_bucket_v1";
+  const LOCAL_FAVS_KEY = "dodo_mario_favs_v1";
 
   let db = null;
   const syncStatusEl = $("sync-status");
@@ -154,20 +174,21 @@
   }
 
   if (!db && syncStatusEl) {
-    syncStatusEl.textContent = "Saved on this device (connect Firebase in config.js for live sync)";
+    syncStatusEl.textContent = "Saved on this device";
   }
 
-  function readLocal(key) {
+  function readLocal(key, fallback = []) {
     try {
-      const parsed = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(parsed) ? parsed : [];
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
     } catch {
-      return [];
+      return fallback;
     }
   }
 
-  function writeLocal(key, list) {
-    localStorage.setItem(key, JSON.stringify(list));
+  function writeLocal(key, val) {
+    localStorage.setItem(key, JSON.stringify(val));
   }
 
   // Compress uploaded photo cleanly via <canvas> so it's fast & fits in Firestore
@@ -198,7 +219,6 @@
 
           let quality = 0.78;
           let dataUrl = canvas.toDataURL("image/jpeg", quality);
-          // Ensure under ~650 KB for fast Firestore saves
           while (dataUrl.length > 680000 && quality > 0.4) {
             quality -= 0.1;
             dataUrl = canvas.toDataURL("image/jpeg", quality);
@@ -212,7 +232,7 @@
   }
 
   // ================= HERO & META =================
-  document.title = `For ${cfg.herName} — From ${cfg.yourName}`;
+  document.title = `${cfg.yourName} & ${cfg.herName} — Our Memories`;
   $("eyebrow-en").textContent = cfg.eyebrow;
   $("eyebrow-ar").textContent = cfg.eyebrowAr;
   $("hero-title-text").textContent = cfg.heroTitle;
@@ -262,19 +282,59 @@
     }
   });
 
-  // ================= POLAROID GALLERY (STATIC + DYNAMIC) =================
+  // ================= POLAROID GALLERY (STATIC + DYNAMIC + FILTERS + FAVS) =================
   $("gallery-heading").textContent = cfg.galleryHeading;
   $("gallery-subheading-ar").textContent = cfg.gallerySubheadingAr;
 
   const grid = $("polaroid-grid");
   let dynamicMemories = [];
-  let allPhotos = [...cfg.photos];
+  let visiblePhotos = [...cfg.photos];
+  let activeFilter = "all";
+  let favIds = new Set(readLocal(LOCAL_FAVS_KEY, []));
+
+  function toggleFavorite(photoId, btnEl) {
+    if (!photoId) return;
+    if (favIds.has(photoId)) {
+      favIds.delete(photoId);
+    } else {
+      favIds.add(photoId);
+      spawnHearts(btnEl, 6);
+    }
+    writeLocal(LOCAL_FAVS_KEY, Array.from(favIds));
+    renderGallery();
+  }
+
+  document.querySelectorAll(".filter-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("is-active"));
+      pill.classList.add("is-active");
+      activeFilter = pill.dataset.filter;
+      renderGallery();
+    });
+  });
 
   function renderGallery() {
-    allPhotos = [...cfg.photos, ...dynamicMemories];
-    grid.innerHTML = "";
+    const combined = [...cfg.photos, ...dynamicMemories];
 
-    allPhotos.forEach((photo, index) => {
+    visiblePhotos = combined.filter((p) => {
+      if (activeFilter === "all") return true;
+      if (activeFilter === "favorites") return favIds.has(p.id);
+      return p.addedBy === activeFilter;
+    });
+
+    grid.innerHTML = "";
+    if (!visiblePhotos.length) {
+      const empty = document.createElement("p");
+      empty.className = "gallery-empty";
+      empty.textContent =
+        activeFilter === "favorites"
+          ? "No favorite memories yet — tap ♥ on any Polaroid to save it here!"
+          : `No memories added by ${activeFilter} yet — tap "+ Add a Memory" above ♥`;
+      grid.appendChild(empty);
+      return;
+    }
+
+    visiblePhotos.forEach((photo, index) => {
       const figure = document.createElement("figure");
       figure.className = "polaroid";
       figure.style.setProperty("--tilt", `${photo.tilt || 0}deg`);
@@ -286,9 +346,18 @@
       tape.className = `washi-tape washi-${photo.tape || "cream"}`;
       tape.setAttribute("aria-hidden", "true");
 
-      const frame = document.createElement("div");
-      frame.className = "polaroid-frame";
-      populatePhotoFrame(frame, photo);
+      const favBtn = document.createElement("button");
+      const isFav = favIds.has(photo.id);
+      favBtn.className = `polaroid-fav-btn${isFav ? " is-fav" : ""}`;
+      favBtn.type = "button";
+      favBtn.title = isFav ? "Remove from favorites" : "Add to favorites";
+      favBtn.setAttribute("aria-label", favBtn.title);
+      favBtn.textContent = isFav ? "♥" : "♡";
+      favBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavorite(photo.id, favBtn);
+      });
+      figure.appendChild(favBtn);
 
       if (photo.addedBy) {
         const badge = document.createElement("span");
@@ -296,6 +365,10 @@
         badge.textContent = `By ${photo.addedBy} ♥`;
         figure.appendChild(badge);
       }
+
+      const frame = document.createElement("div");
+      frame.className = "polaroid-frame";
+      populatePhotoFrame(frame, photo);
 
       const caption = document.createElement("figcaption");
       caption.className = "polaroid-caption";
@@ -423,7 +496,7 @@
       photoPreview.src = selectedPhotoDataUrl;
       photoPreview.hidden = false;
       dropzoneEmpty.hidden = true;
-    } catch (err) {
+    } catch {
       addError.textContent = "Could not load that photo. Please try another image.";
     }
   });
@@ -436,7 +509,7 @@
     const addedBy = $("memory-author").value;
 
     if (!selectedPhotoDataUrl) {
-      addError.textContent = "Please choose a photo first ♥ — اختاري صورة الأول";
+      addError.textContent = "Please choose a photo first ♥ — اختاروا صورة الأول";
       return;
     }
     if (!caption) {
@@ -477,6 +550,173 @@
     } finally {
       saveMemoryBtn.disabled = false;
       saveMemoryBtn.textContent = "Add to Our Scrapbook ♥";
+    }
+  });
+
+  // ================= SHARED BUCKET LIST =================
+  const bucketCfg = cfg.bucketSection;
+  $("bucket-kicker").textContent = bucketCfg.kicker;
+  $("bucket-title").textContent = bucketCfg.title;
+  $("bucket-title-ar").textContent = bucketCfg.titleAr;
+  $("bucket-hint").textContent = bucketCfg.hint;
+  $("bucket-input").placeholder = bucketCfg.placeholder;
+
+  const bucketListEl = $("bucket-list");
+  const bucketCountText = $("bucket-count-text");
+  const bucketBarFill = $("bucket-bar-fill");
+  let bucketItems = [];
+  let bucketUseLocal = !db;
+
+  function renderBucketList() {
+    bucketListEl.innerHTML = "";
+    const doneCount = bucketItems.filter((i) => i.done).length;
+    const total = bucketItems.length;
+    const pct = total ? Math.round((doneCount / total) * 100) : 0;
+    bucketCountText.textContent = `${doneCount} of ${total} dreams completed (${pct}%)`;
+    bucketBarFill.style.width = `${pct}%`;
+
+    bucketItems.forEach((item) => {
+      const li = document.createElement("li");
+      li.className = `bucket-item${item.done ? " is-done" : ""}`;
+
+      const label = document.createElement("label");
+      label.className = "bucket-check-label";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "bucket-checkbox";
+      checkbox.checked = Boolean(item.done);
+      checkbox.addEventListener("change", async () => {
+        const nextDone = checkbox.checked;
+        if (nextDone) spawnHearts(li, 8);
+        await toggleBucketItem(item.id, nextDone);
+      });
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "bucket-item-text";
+      textSpan.dir = "auto";
+      textSpan.textContent = item.text;
+
+      label.append(checkbox, textSpan);
+
+      const meta = document.createElement("div");
+      meta.className = "bucket-item-meta";
+
+      if (item.addedBy) {
+        const tag = document.createElement("span");
+        tag.className = "bucket-tag";
+        tag.textContent = item.addedBy;
+        meta.appendChild(tag);
+      }
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "note-delete";
+      delBtn.type = "button";
+      delBtn.title = "Remove item";
+      delBtn.setAttribute("aria-label", "Remove item");
+      delBtn.textContent = "×";
+      delBtn.addEventListener("click", async () => {
+        await deleteBucketItem(item.id);
+      });
+      meta.appendChild(delBtn);
+
+      li.append(label, meta);
+      bucketListEl.appendChild(li);
+    });
+  }
+
+  function loadLocalBucket() {
+    const saved = readLocal(LOCAL_BUCKET_KEY, null);
+    if (Array.isArray(saved)) {
+      bucketItems = saved;
+    } else {
+      bucketItems = (bucketCfg.starterIdeas || []).map((s, idx) => ({
+        ...s,
+        createdAt: Date.now() - (10 - idx) * 1000,
+      }));
+      writeLocal(LOCAL_BUCKET_KEY, bucketItems);
+    }
+    renderBucketList();
+  }
+
+  async function addBucketItem(itemObj) {
+    if (db && !bucketUseLocal) {
+      await db.collection("bucketList").add(itemObj);
+    } else {
+      bucketItems = [...bucketItems, { ...itemObj, id: `b_${Date.now()}` }];
+      writeLocal(LOCAL_BUCKET_KEY, bucketItems);
+      renderBucketList();
+    }
+  }
+
+  async function toggleBucketItem(id, done) {
+    if (db && !bucketUseLocal) {
+      await db.collection("bucketList").doc(id).update({ done });
+    } else {
+      bucketItems = bucketItems.map((i) => (i.id === id ? { ...i, done } : i));
+      writeLocal(LOCAL_BUCKET_KEY, bucketItems);
+      renderBucketList();
+    }
+  }
+
+  async function deleteBucketItem(id) {
+    if (db && !bucketUseLocal) {
+      await db.collection("bucketList").doc(id).delete();
+    } else {
+      bucketItems = bucketItems.filter((i) => i.id !== id);
+      writeLocal(LOCAL_BUCKET_KEY, bucketItems);
+      renderBucketList();
+    }
+  }
+
+  if (db) {
+    db.collection("bucketList")
+      .orderBy("createdAt", "asc")
+      .onSnapshot(
+        (snapshot) => {
+          bucketUseLocal = false;
+          if (snapshot.empty && !localStorage.getItem("dodo_bucket_seeded")) {
+            localStorage.setItem("dodo_bucket_seeded", "1");
+            (bucketCfg.starterIdeas || []).forEach((s, idx) => {
+              db.collection("bucketList").add({
+                text: s.text,
+                addedBy: s.addedBy,
+                done: false,
+                createdAt: Date.now() + idx,
+              });
+            });
+            return;
+          }
+          bucketItems = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          renderBucketList();
+        },
+        (err) => {
+          console.warn("Bucket list Firestore fallback to local:", err);
+          bucketUseLocal = true;
+          loadLocalBucket();
+        }
+      );
+  } else {
+    loadLocalBucket();
+  }
+
+  $("bucket-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = $("bucket-input");
+    const text = input.value.trim();
+    if (!text) return;
+    const addedBy = $("bucket-author").value;
+
+    const btn = $("bucket-submit-btn");
+    btn.disabled = true;
+    try {
+      await addBucketItem({ text, addedBy, done: false, createdAt: Date.now() });
+      input.value = "";
+      spawnHearts(btn, 7);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      btn.disabled = false;
     }
   });
 
@@ -640,7 +880,7 @@
     }
   });
 
-  // ================= HANDWRITTEN LOVE LETTER =================
+  // ================= SAVED LETTER =================
   $("letter-eyebrow").textContent = cfg.letter.eyebrow;
   $("letter-title").textContent = cfg.letter.title;
   $("letter-title-ar").textContent = cfg.letter.titleAr;
@@ -671,7 +911,7 @@
   $("letter-closing-en").textContent = cfg.letter.closing;
   $("letter-closing-ar").textContent = cfg.letter.closingAr;
   $("signature-en").textContent = cfg.yourName;
-  $("signature-ar").textContent = cfg.yourNameAr;
+  $("signature-ar").textContent = cfg.herName;
 
   // ================= LIGHTBOX MODAL =================
   const lightbox = $("lightbox");
@@ -680,7 +920,7 @@
   let activeIndex = 0;
 
   function renderLightbox() {
-    const photo = allPhotos[activeIndex];
+    const photo = visiblePhotos[activeIndex];
     if (!photo) return;
     populatePhotoFrame($("lb-frame"), photo);
     $("lb-date").textContent = photo.date || "";
@@ -688,7 +928,7 @@
     $("lb-caption-ar").textContent = photo.captionAr || "";
     $("lb-story-en").textContent = photo.story || "";
     $("lb-story-ar").textContent = photo.storyAr || "";
-    $("lb-counter").textContent = `${activeIndex + 1} / ${allPhotos.length}`;
+    $("lb-counter").textContent = `${activeIndex + 1} / ${visiblePhotos.length}`;
 
     if (photo.addedBy) {
       lbAuthorTag.textContent = `Added by ${photo.addedBy} ♥`;
@@ -715,8 +955,8 @@
   }
 
   function stepLightbox(delta) {
-    if (!allPhotos.length) return;
-    activeIndex = (activeIndex + delta + allPhotos.length) % allPhotos.length;
+    if (!visiblePhotos.length) return;
+    activeIndex = (activeIndex + delta + visiblePhotos.length) % visiblePhotos.length;
     renderLightbox();
   }
 
@@ -727,9 +967,9 @@
   $("lb-next").addEventListener("click", () => stepLightbox(1));
 
   lbDeleteBtn.addEventListener("click", async () => {
-    const photo = allPhotos[activeIndex];
+    const photo = visiblePhotos[activeIndex];
     if (!photo || !photo.id) return;
-    if (!confirm("Remove this memory from the scrapbook?")) return;
+    if (!confirm("Remove this memory from our scrapbook?")) return;
     await deleteMemoryById(photo.id);
     closeLightbox();
   });

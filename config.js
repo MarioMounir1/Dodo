@@ -1,21 +1,21 @@
 /**
  * ============================================================
- *  PERSONALIZED FOR دودو — FROM MARIO
+ *  MARIO & دودو — OUR SHARED MEMORIES SPACE
  * ============================================================
  */
 window.SCRAPBOOK_CONFIG = {
-  // Her name / nickname (English & Arabic)
+  // Couple names
   herName: "دودو",
   herNameAr: "دودو",
-
-  // Your name / signature
   yourName: "Mario",
   yourNameAr: "ماريو",
 
+  // The day your story started (used for live counter & lock screen)
+  startDateISO: "2026-08-17T00:00:00",
+  startDateLabel: "17 / 8 / 2026",
+
   // ============================================================
-  //  LIVE CLOUD SYNC (Firebase Firestore — 100% Free, No Card)
-  //  Paste your Firebase web config below and set enabled: true
-  //  so everything دودو adds on her phone appears on yours too!
+  //  LIVE CLOUD SYNC (Firebase Firestore)
   // ============================================================
   firebase: {
     enabled: true,
@@ -33,109 +33,111 @@ window.SCRAPBOOK_CONFIG = {
   // Password Lock Screen (Day you started talking: 17/8/2026)
   lockScreen: {
     enabled: true,
-    acceptedNormalized: ["17/8/2026", "17/08/2026", "1782026", "17082026"],
-    badgeEn: "Private scrapbook",
-    badgeAr: "لدودو وبس",
-    title: "For my favorite person, دودو",
-    subtitleEn: "Enter the day we started talking to unlock your gift",
-    subtitleAr: "اكتبي اليوم اللي بدأنا نتكلم فيه عشان تفتحي الهدية",
-    placeholder: "DD/M/YYYY",
-    buttonText: "Unlock ♥",
-    wrongMessage: "Almost! Think of the day our story started ♥ — حاولي تاني يا دودو",
+    badgeEn: "Our private space",
+    badgeAr: "مساحتنا الخاصة",
+    title: "Mario & دودو",
+    subtitleEn: "Enter the day our story started to open our memories",
+    subtitleAr: "اكتبوا اليوم اللي بدأت فيه قصتنا عشان نفتح ذكرياتنا",
+    buttonText: "Enter Our Space ♥",
+    wrongMessage: "Almost! Think of the day we first talked ♥ — حاولوا تاني",
     hintText: "Just type the numbers — no slashes needed",
   },
 
-  // Small top eyebrow badge
+  // Hero section
   eyebrow: "Since 17 / 8 / 2026",
-  eyebrowAr: "هدية صغيرة ليكي يا دودو",
-
-  // Hero headline & subtitle
-  heroTitle: "To my favorite person in the whole world,",
-  heroSubtitleAr: "يا أحلى وأغلى حاجة جاتلي في حياتي",
+  eyebrowAr: "مساحتنا وذكرياتنا سوا",
+  heroTitle: "Mario &",
+  heroSubtitleAr: "قصتنا، صورنا، وكل ذكرياتنا الحلوة في مكان واحد",
   heroIntro:
-    "I put together our favorite moments, your sweetest words, and everything I love about you. You can also add your own photos, memories, and notes anytime!",
+    "Our private little corner of the internet — a living scrapbook where both of us can add photos, save memories, check off our bucket list, and leave notes for each other anytime.",
 
   // Featured cover Polaroid in the hero section
   coverPhoto: {
     src: "photos/cover.jpg",
-    caption: "Under the stars with you",
-    captionAr: "أحلى مكان في الدنيا هو جنبك",
+    caption: "Under the stars together",
+    captionAr: "أحلى مكان في الدنيا هو مع بعض",
     date: "Mario & دودو",
     placeholderTone: "rose",
   },
 
   // Polaroid Photo Gallery
-  galleryHeading: "Our Little Moments",
-  gallerySubheadingAr: "ذكرياتنا سوا اللي بحبها أوي",
+  galleryHeading: "Our Memories",
+  gallerySubheadingAr: "ذكرياتنا سوا اللي بنحبها أوي",
   photos: [
     {
+      id: "static_1",
       src: "photos/photo-1.jpg",
       date: "11 / 05 / 2026",
-      caption: "Holding your hand, my favorite feeling",
-      captionAr: "مسكة إيدك دي بالدنيا كلها",
+      caption: "Holding hands, our favorite feeling",
+      captionAr: "مسكة الإيد دي بالدنيا كلها",
       story:
-        "Warm lights, matching glasses, your hand in mine, and that cute wink. I could freeze this exact moment and live in it forever.",
-      storyAr: "أحلى سهرة وأحلى ضحكة.. إيدك في إيدي بتنسيني أي حاجة في الدنيا.",
+        "Warm lights, matching glasses, hands intertwined, and that cute wink. One of those nights we never want to forget.",
+      storyAr: "أحلى سهرة وأحلى ضحكة.. لحظة من اللحظات اللي بتفضل في القلب على طول.",
       tape: "blush",
       tilt: -2.8,
       placeholderTone: "warm",
     },
     {
+      id: "static_2",
       src: "photos/photo-2.jpg",
       date: "Us",
-      caption: "The way you look at me",
-      captionAr: "أحلى نظرة في الدنيا",
+      caption: "The way we look together",
+      captionAr: "أحلى نظرة وأحلى صورة لينا",
       story:
-        "One of my absolute favorite photos of us. Even when I'm just looking at my phone, seeing the way you look at me makes my heart melt every single time.",
-      storyAr: "كل ما بشوف الصورة دي ببتسم لوحدي.. وجودك جنبي مخليني أسعد واحد في الدنيا.",
+        "One of our absolute favorite mirror moments — effortless, smiling, and completely in our own little world.",
+      storyAr: "كل ما بنشوف الصورة دي بنبتسم.. وجودنا سوا بيخلي كل حاجة أحلى.",
       tape: "cream",
       tilt: 2.3,
       placeholderTone: "sunset",
     },
     {
+      id: "static_3",
       src: "photos/photo-3.jpg",
       date: "Matching Vibes",
       caption: "Twin outfits, same heart",
       captionAr: "أحلى كابل في الجيم وفي الدنيا كلها",
       story:
-        "Black tops, grey sweats, white sneakers — we didn't even have to try and we still look iconic together.",
-      storyAr: "حتى في اللبس شبه بعض.. بحب كل تفصيلة بنعملها سوا.",
+        "Black tops, grey sweats, white sneakers — we didn't even have to try and we still matched perfectly.",
+      storyAr: "حتى في اللبس شبه بعض.. كل تفصيلة بنعملها سوا بتبقى مميزة.",
       tape: "sage",
       tilt: -1.9,
       placeholderTone: "peach",
     },
     {
+      id: "static_4",
       src: "photos/photo-4.jpg",
       date: "Close-up",
-      caption: "My prettiest girl",
-      captionAr: "قمر من غير ما تحاولي حتى",
+      caption: "Favorite faces",
+      captionAr: "أحلى سيلفي لينا سوا",
       story:
-        "You never believe me when I tell you how gorgeous you are, so I'm keeping this photo right here as permanent proof.",
-      storyAr: "بجد أحلى وأقمر واحدة شافتها عيني.. ربنا يخليكي ليا يا دودو.",
+        "Matching glasses, silly faces, and zero filter needed — just us being completely ourselves.",
+      storyAr: "أحلى ذكريات هي اللحظات العفوية اللي على طبيعتنا فيها.",
       tape: "cream",
       tilt: 2.9,
       placeholderTone: "honey",
     },
     {
+      id: "static_5",
       src: "photos/photo-5.jpg",
-      date: "Your Handwritten Note",
-      caption: "Words I'll keep forever",
-      captionAr: "أغلى ورقة عندي في الدنيا",
+      date: "Handwritten Note",
+      caption: "Words we'll keep forever",
+      captionAr: "أغلى ورقة عندنا في الدنيا",
       story:
-        "Reading what you wrote for me meant more than I could ever explain. I promise to always be your safe place, to calm your heart, and to stay beside you forever.",
-      storyAr: "كلامك ده لمس قلبي أوي.. بوعدك إني هفضل دايماً جنبك وأمانك طول العمر.",
+        "A handwritten reminder of how much love, safety, and care we found in each other. Kept right here forever.",
+      storyAr: "كلام من القلب للقلب.. هيفضل محفوظ هنا على طول.",
       tape: "blush",
       tilt: -2.4,
       placeholderTone: "lavender",
     },
     {
+      id: "static_6",
       src: "photos/photo-6.jpg",
       date: "Our Chats",
       caption: "You really are my everything",
-      captionAr: "إنتي فعلاً كل حاجة ليا يا دودو",
+      captionAr: "إنتي فعلاً كل حاجة ليا",
       story:
-        "Every word I sent here I meant with my whole heart. You deserve the entire world and more, and I thank God every day that He brought you into my life.",
-      storyAr: "الله لا يحرمني منك أبداً.. بجد أحلى حاجة جاتلي في حياتي.",
+        "The kind of late-night messages that make you smile at your phone screen and thank God for each other.",
+      storyAr: "الله لا يحرمنا من بعض أبداً.. أحلى حاجة حصلت في حياتنا.",
       tape: "sage",
       tilt: 2.1,
       fit: "contain",
@@ -143,13 +145,14 @@ window.SCRAPBOOK_CONFIG = {
       placeholderTone: "rose",
     },
     {
+      id: "static_7",
       src: "photos/photo-7.jpg",
-      date: "My Sweetest Notification",
+      date: "Sweetest Notification",
       caption: "“بحبك اكترر ماي سويت موووريي”",
-      captionAr: "أحلى رسالة بتفرح قلبي",
+      captionAr: "أحلى رسالة بتفرح القلب",
       story:
-        "No matter how many times we say it, hearing you say it still gives me butterflies like the very first time.",
-      storyAr: "بحبك أوي يا دودو.. وكل يوم بحبك أكتر من اليوم اللي قبله.",
+        "No matter how many times we say it, it still gives butterflies like the very first time.",
+      storyAr: "كل يوم بنحب بعض أكتر من اليوم اللي قبله.",
       tape: "cream",
       tilt: -2.6,
       fit: "contain",
@@ -157,12 +160,13 @@ window.SCRAPBOOK_CONFIG = {
       placeholderTone: "warm",
     },
     {
+      id: "static_8",
       src: "photos/photo-8.jpg",
       date: "Always",
       caption: "“بحبك اوي يا روح قلبي”",
       captionAr: "يا روح قلبي وعقلي وكل حاجة",
       story:
-        "Simple words, endless meaning. Just wanted to remind you again right here: I love you so, so much.",
+        "Simple words, endless meaning. Kept right here as a permanent part of our story.",
       storyAr: "بحبك أوي يا روح قلبي.. النهاردة وبكرة وللأبد.",
       tape: "blush",
       tilt: 1.8,
@@ -172,49 +176,64 @@ window.SCRAPBOOK_CONFIG = {
     },
   ],
 
-  // Shared Notes Wall (دودو & Mario can type anything here!)
-  notesSection: {
-    kicker: "02 / Our Notes Wall",
-    title: "Write Anything Here",
-    titleAr: "اكتبي أي حاجة في قلبك هنا يا دودو",
-    hint: "Leave a sweet note, a random thought, or a message for each other anytime ♥",
-    placeholder: "Write something sweet in English or Arabic... اكتبي أي حاجة هنا ♥",
-    emptyText: "No notes pinned yet — be the first to write something sweet ♥",
+  // Shared Couple Bucket List
+  bucketSection: {
+    kicker: "02 / Our Bucket List",
+    title: "Things We Want to Do Together",
+    titleAr: "حاجات عايزين نعملها سوا",
+    hint: "Add new ideas anytime and check them off when we do them together ♥",
+    placeholder: "Add a dream or date idea... (e.g. Sunset walk by the sea)",
+    starterIdeas: [
+      { id: "starter_1", text: "Late-night coffee & long drive with our favorite playlist", addedBy: "Mario", done: false },
+      { id: "starter_2", text: "Watch the sunset by the sea together", addedBy: "دودو", done: false },
+      { id: "starter_3", text: "Cook our favorite meal together at home", addedBy: "Mario", done: false },
+      { id: "starter_4", text: "Take a spontaneous road trip & fill this site with photos", addedBy: "دودو", done: false },
+    ],
   },
 
-  // Handwritten Love Letter section
+  // Shared Notes Wall
+  notesSection: {
+    kicker: "03 / Our Notes Wall",
+    title: "Leave a Note Anytime",
+    titleAr: "اكتبوا أي حاجة لبعض هنا",
+    hint: "Sweet messages, random thoughts, inside jokes, or little reminders ♥",
+    placeholder: "Write something sweet in English or Arabic... اكتبوا أي حاجة هنا ♥",
+    emptyText: "No notes pinned yet — be the first to leave one ♥",
+  },
+
+  // Saved Letter section
   letter: {
-    eyebrow: "03 / From Mario's Heart",
-    title: "For you, دودو",
-    titleAr: "كلام من قلبي ليكي",
-    greeting: "My dearest دودو,",
+    eyebrow: "04 / Where It All Began",
+    title: "A Note Kept Forever",
+    titleAr: "كلام محفوظ من القلب",
+    greeting: "To our story — Mario & دودو,",
     paragraphs: [
       {
-        en: "Since 17/8/2026 — the very first day we started talking — my whole world quietly became brighter, warmer, and happier just because you're in it.",
-        ar: "من يوم ١٧/٨/٢٠٢٦ وأنا حياتي اتغيرت للأحلى بوجودك فيها.. بجد إنتي أحلى حاجة جاتلي في حياتي.",
+        en: "Since 17/8/2026 — the very first day we started talking — life quietly became warmer, brighter, and fuller of laughter just because we found each other.",
+        ar: "من يوم ١٧/٨/٢٠٢٦ وحياتنا اتغيرت للأحلى بوجودنا سوا.. بجد أحلى حاجة حصلتلنا.",
       },
       {
-        en: "I love everything about you — your smile, your curls, the way you look at me, your kind heart, and the way you call me your sweet Mario. Being next to you feels like home.",
-        ar: "بحب فيكي كل تفاصيلك الصغيرة، طيبتك، ضحكتك، وكلامك اللي بيفرح قلبي في ثانية.",
+        en: "This little website is ours to grow together: every new photo, every silly selfie, every late-night note, and every dream we check off our bucket list.",
+        ar: "المكان ده بتاعنا إحنا الاتنين.. هنملاه صور وذكريات وضحك وأيام حلوة ملهاش آخر.",
       },
       {
-        en: "Thank you for trusting me with your heart and for that handwritten note I'll treasure forever. I promise to always take care of you, calm you down, make you laugh, and love you more every single day.",
-        ar: "بوعدك إني هفضل دايماً جنبك، سندك، أمانك، وبحبك أكتر كل يوم عن اللي قبله.. الله لا يحرمني منك أبداً.",
+        en: "No matter how many days pass, may we always be each other's safe place, best friend, and favorite home.",
+        ar: "يا رب نفضل دايماً سند وأمان لبعض، وكل سنة نرجع هنا نلاقي ذكريات أكتر وأحلى.. الله لا يحرمنا من بعض أبداً.",
       },
     ],
-    closing: "I love you more than words can ever say.",
-    closingAr: "بحبك أوي يا روح قلبي.. النهاردة وبكرة وللأبد",
+    closing: "Here's to a million more memories together.",
+    closingAr: "مع بعض النهاردة وبكرة وللأبد",
   },
 
   // Interactive closing note
   ending: {
-    buttonText: "Tap for a little love",
+    buttonText: "Send a little love ♥",
     messages: [
       "بحبك اوي يا روح قلبي ❤️",
-      "You are my everything, دودو — إنتي فعلاً كل حاجة ليا",
-      "Since 17/8/2026 & forever — مع بعض على طول",
-      "Always your sweet Mario — حبيبك ماريو ❤️",
-      "الله لا يحرمني منك أبداً يا دودو",
+      "Mario & دودو — Since 17/8/2026 & forever",
+      "You're my favorite home — أحلى مكان هو مع بعض",
+      "الله لا يحرمنا من بعض أبداً ❤️",
+      "To a million more memories together ✨",
     ],
   },
 };

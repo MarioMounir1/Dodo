@@ -284,10 +284,52 @@ body.is-locked .scrapbook {
 }
 
 .hero-intro {
-  margin: 1.15rem 0 2rem;
+  margin: 1.15rem 0 1.4rem;
   max-width: 52ch;
   color: var(--ink-soft);
   font-size: 1.02rem;
+}
+
+/* ================= LIVE TOGETHER COUNTER ================= */
+.together-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1.7rem;
+  border-radius: 14px;
+  background: rgba(255, 253, 249, 0.85);
+  border: 1px solid rgba(196, 87, 79, 0.2);
+  box-shadow: 0 8px 20px rgba(56, 37, 26, 0.06);
+}
+
+.counter-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+}
+
+.counter-num {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--rose-deep);
+}
+
+.counter-label {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.counter-sep {
+  font-size: 1.2rem;
+  color: var(--rose-soft);
+  margin-top: -0.7rem;
 }
 
 .hero-actions {
@@ -595,6 +637,207 @@ body.is-locked .scrapbook {
 
 .sync-badge.is-live {
   color: #4f7a5a;
+}
+
+/* Gallery filter pills */
+.gallery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.filter-pill {
+  padding: 0.36rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(92, 68, 52, 0.18);
+  background: rgba(255, 253, 249, 0.85);
+  color: var(--ink-soft);
+  font-family: "Cairo", "DM Sans", sans-serif;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.filter-pill.is-active,
+.filter-pill:hover {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #fffdf9;
+}
+
+/* Favorite heart button on each Polaroid */
+.polaroid-fav-btn {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 253, 249, 0.9);
+  color: var(--ink-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 6px rgba(44, 34, 30, 0.16);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.polaroid-fav-btn:hover {
+  transform: scale(1.12);
+}
+
+.polaroid-fav-btn.is-fav {
+  color: var(--rose);
+}
+
+.gallery-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-muted);
+  font-style: italic;
+  padding: 1.5rem 0;
+}
+
+/* ================= BUCKET LIST ================= */
+.bucket-card {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--bg-paper);
+  padding: 2.2rem 1.85rem 1.85rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(92, 68, 52, 0.09);
+}
+
+.bucket-progress {
+  margin-bottom: 1.35rem;
+}
+
+.bucket-count-text {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  margin-bottom: 0.45rem;
+}
+
+.bucket-bar-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-warm);
+  overflow: hidden;
+}
+
+.bucket-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rose-soft), var(--rose));
+  transition: width 0.4s ease;
+}
+
+.bucket-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.55rem;
+  margin-bottom: 1.35rem;
+}
+
+.bucket-author-select {
+  width: auto;
+  min-width: 96px;
+}
+
+.bucket-add-btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0.65rem 1.15rem;
+}
+
+.bucket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.bucket-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.78rem 0.9rem;
+  border-radius: 8px;
+  background: var(--bg-cream);
+  border: 1px solid rgba(92, 68, 52, 0.08);
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.bucket-item.is-done {
+  opacity: 0.72;
+  background: #f3f7f1;
+}
+
+.bucket-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.bucket-checkbox {
+  width: 19px;
+  height: 19px;
+  accent-color: var(--rose);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bucket-item-text {
+  font-family: "Cairo", "DM Sans", sans-serif;
+  font-size: 0.96rem;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.bucket-item.is-done .bucket-item-text {
+  text-decoration: line-through;
+  color: var(--ink-soft);
+}
+
+.bucket-item-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.bucket-tag {
+  font-family: "Cairo", "DM Sans", sans-serif;
+  font-size: 0.75rem;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(196, 87, 79, 0.1);
+  color: var(--rose-deep);
+}
+
+@media (max-width: 580px) {
+  .bucket-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bucket-input {
+    grid-column: 1 / -1;
+  }
 }
 
 .polaroid-grid {
