@@ -60,7 +60,7 @@
 
   if (lockCfg && lockCfg.enabled && dayInput && monthInput && yearInput) {
     $("lock-badge-en").textContent = lockCfg.badgeEn;
-    $("lock-badge-ar").textContent = lockCfg.badgeAr;
+    if ($("lock-badge-ar")) $("lock-badge-ar").textContent = lockCfg.badgeAr;
     $("lock-title").textContent = lockCfg.title;
     $("lock-subtitle-en").textContent = lockCfg.subtitleEn;
     $("lock-subtitle-ar").textContent = lockCfg.subtitleAr;

@@ -33,8 +33,8 @@ window.SCRAPBOOK_CONFIG = {
   // Password Lock Screen (Day you started talking: 17/8/2026)
   lockScreen: {
     enabled: true,
-    badgeEn: "Our private space",
-    badgeAr: "مساحتنا الخاصة",
+    badgeEn: "Our Space",
+    badgeAr: "",
     title: "Mario & دودو",
     subtitleEn: "Enter the day our story started to open our memories",
     subtitleAr: "اكتبوا اليوم اللي بدأت فيه قصتنا عشان نفتح ذكرياتنا",
