@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=9" />
+    <link rel="stylesheet" href="styles.css?v=10" />
   </head>
   <body class="is-locked">
     <!-- Subtle warm paper texture overlay -->
@@ -132,6 +132,7 @@
               <span>Our Memories</span>
               <span class="btn-arrow" aria-hidden="true">↓</span>
             </a>
+            <a href="#songs" class="btn-ghost">Our Songs ♪</a>
             <a href="#bucket" class="btn-ghost">Bucket List ✓</a>
             <a href="#notes" class="btn-ghost">Notes Wall ✎</a>
           </div>
@@ -176,6 +177,25 @@
         </div>
 
         <div id="polaroid-grid" class="polaroid-grid" aria-label="Polaroid photo gallery"></div>
+      </section>
+
+      <!-- OUR FAVORITE SONGS -->
+      <section id="songs" class="section songs-section reveal">
+        <div class="section-header">
+          <p id="songs-kicker" class="section-kicker"></p>
+          <h2 id="songs-title" class="section-title"></h2>
+          <p id="songs-title-ar" class="section-subtitle-ar" dir="rtl" lang="ar"></p>
+          <p id="songs-hint" class="section-hint"></p>
+
+          <div class="songs-toolbar">
+            <button id="open-add-song-btn" class="btn-primary btn-add-memory" type="button">
+              <span>+ Add a Song ♪</span>
+              <span class="btn-ar-tag" dir="rtl" lang="ar">أضف أغنية</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="songs-grid" class="songs-grid" aria-label="Our favorite songs"></div>
       </section>
 
       <!-- SHARED COUPLE BUCKET LIST -->
@@ -405,11 +425,132 @@
       </div>
     </div>
 
+    <!-- ADD SONG MODAL -->
+    <div id="add-song-modal" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="add-song-title">
+      <div class="lightbox-backdrop" data-close-add-song="true"></div>
+      <div class="add-modal-card">
+        <button class="lightbox-close" type="button" aria-label="Close" data-close-add-song="true">×</button>
+
+        <h3 id="add-song-title" class="add-modal-title">Add a Favorite Song ♪</h3>
+        <p class="add-modal-sub" dir="rtl" lang="ar">أضيفوا سكرين شوت للأغنية واكتبوا أكتر جملة بتحبوها فيها</p>
+
+        <form id="add-song-form" class="add-memory-form">
+          <label class="photo-dropzone" for="song-photo-input" id="song-dropzone">
+            <input id="song-photo-input" type="file" accept="image/*" hidden />
+            <img id="song-photo-preview" class="photo-preview" alt="Selected song screenshot preview" hidden />
+            <div id="song-dropzone-empty" class="dropzone-empty">
+              <span class="dropzone-icon" aria-hidden="true">🎵</span>
+              <span class="dropzone-text">Tap to upload song screenshot</span>
+              <span class="dropzone-ar" dir="rtl" lang="ar">اختاروا سكرين شوت للأغنية من الموبايل أو الجهاز</span>
+            </div>
+          </label>
+
+          <div class="form-row">
+            <div class="field-group">
+              <label class="field-label" for="song-author">Added by</label>
+              <select id="song-author" class="field-input">
+                <option value="دودو">دودو ♥</option>
+                <option value="Mario">Mario ♥</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="song-artist">Artist (optional)</label>
+              <input
+                id="song-artist"
+                class="field-input"
+                type="text"
+                placeholder="e.g. Amr Diab"
+                dir="auto"
+              />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="song-name">Song name</label>
+            <input
+              id="song-name"
+              class="field-input"
+              type="text"
+              placeholder="e.g. Tamally Maak"
+              dir="auto"
+              required
+            />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="song-quote">Favorite quote / lyric from the song</label>
+            <textarea
+              id="song-quote"
+              class="field-input field-textarea"
+              rows="3"
+              placeholder="Write your favorite line from the song (English or Arabic)..."
+              dir="auto"
+              required
+            ></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="song-link">Song link (optional — Spotify / YouTube / Anghami)</label>
+            <input
+              id="song-link"
+              class="field-input"
+              type="url"
+              placeholder="https://open.spotify.com/..."
+              dir="ltr"
+            />
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Washi tape color</span>
+            <div class="tape-picker" role="radiogroup" aria-label="Song tape color">
+              <button type="button" class="song-tape-choice tape-choice is-active" data-song-tape="blush">Blush</button>
+              <button type="button" class="song-tape-choice tape-choice" data-song-tape="cream">Cream</button>
+              <button type="button" class="song-tape-choice tape-choice" data-song-tape="sage">Sage</button>
+            </div>
+          </div>
+
+          <p id="add-song-error" class="lock-error" role="alert" aria-live="polite"></p>
+
+          <button id="save-song-btn" class="btn-primary add-submit-btn" type="submit">
+            Add to Our Soundtrack ♪
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SONG LIGHTBOX MODAL -->
+    <div id="song-lightbox" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="song-lb-name">
+      <div class="lightbox-backdrop" data-close-song-lb="true"></div>
+      <div class="lightbox-card song-lightbox-card">
+        <button class="lightbox-close" type="button" aria-label="Close song" data-close-song-lb="true">×</button>
+
+        <div class="lightbox-polaroid song-lb-visual">
+          <div id="song-lb-frame" class="song-frame song-lb-frame"></div>
+        </div>
+
+        <div class="lightbox-story">
+          <span id="song-lb-author" class="lb-author-tag" hidden></span>
+          <h3 id="song-lb-name" class="song-lb-title" dir="auto"></h3>
+          <p id="song-lb-artist" class="song-lb-artist" dir="auto" hidden></p>
+          <blockquote id="song-lb-quote" class="song-lb-quote" dir="auto"></blockquote>
+
+          <div class="song-lb-actions">
+            <a id="song-lb-link" class="btn-primary song-listen-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>
+              ▶ Listen to Song
+            </a>
+            <button id="song-lb-delete" class="btn-delete-memory" type="button" hidden>
+              Remove this song
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-    <script src="config.js?v=10"></script>
-    <script src="app.js?v=10"></script>
+    <script src="config.js?v=11"></script>
+    <script src="app.js?v=11"></script>
   </body>
 </html>

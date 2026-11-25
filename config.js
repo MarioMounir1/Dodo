@@ -176,9 +176,19 @@ window.SCRAPBOOK_CONFIG = {
     },
   ],
 
+  // Our Favorite Songs
+  songsSection: {
+    kicker: "02 / Our Soundtrack",
+    title: "Our Favorite Songs",
+    titleAr: "أغانينا اللي بنحبها سوا",
+    hint: "Screenshots, lyrics, and the songs that always remind us of each other ♪",
+    emptyText: "No songs pinned yet — tap \"+ Add a Song\" to save our first favorite track ♪",
+    songs: [],
+  },
+
   // Shared Couple Bucket List
   bucketSection: {
-    kicker: "02 / Our Bucket List",
+    kicker: "03 / Our Bucket List",
     title: "Things We Want to Do Together",
     titleAr: "حاجات عايزين نعملها سوا",
     hint: "Add new ideas anytime and check them off when we do them together ♥",
@@ -193,7 +203,7 @@ window.SCRAPBOOK_CONFIG = {
 
   // Shared Notes Wall
   notesSection: {
-    kicker: "03 / Our Notes Wall",
+    kicker: "04 / Our Notes Wall",
     title: "Leave a Note Anytime",
     titleAr: "",
     hint: "Sweet messages, random thoughts, inside jokes, or little reminders ♥",
@@ -203,7 +213,7 @@ window.SCRAPBOOK_CONFIG = {
 
   // Saved Letter section
   letter: {
-    eyebrow: "04 / Where It All Began",
+    eyebrow: "05 / Where It All Began",
     title: "A Note Kept Forever",
     titleAr: "كلام محفوظ من القلب",
     greeting: "To our story — Mario & دودو,",

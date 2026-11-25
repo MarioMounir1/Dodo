@@ -164,6 +164,7 @@
 
   // ================= STORAGE (FIREBASE LIVE SYNC + LOCAL FALLBACK) =================
   const LOCAL_MEMORIES_KEY = "dodo_mario_memories_v1";
+  const LOCAL_SONGS_KEY = "dodo_mario_songs_v1";
   const LOCAL_NOTES_KEY = "dodo_mario_notes_v1";
   const LOCAL_BUCKET_KEY = "dodo_mario_bucket_v1";
   const LOCAL_FAVS_KEY = "dodo_mario_favs_v1";
@@ -500,9 +501,9 @@
     if (e.target.dataset.closeAdd === "true") closeAddModal();
   });
 
-  document.querySelectorAll(".tape-choice").forEach((btn) => {
+  document.querySelectorAll("#add-memory-modal .tape-choice").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tape-choice").forEach((b) => b.classList.remove("is-active"));
+      document.querySelectorAll("#add-memory-modal .tape-choice").forEach((b) => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       selectedTape = btn.dataset.tape;
     });
@@ -573,6 +574,421 @@
       saveMemoryBtn.textContent = "Add to Our Scrapbook ♥";
     }
   });
+
+  // ================= OUR FAVORITE SONGS =================
+  const songsCfg = cfg.songsSection || {};
+  if ($("songs-kicker")) $("songs-kicker").textContent = songsCfg.kicker || "02 / Our Soundtrack";
+  if ($("songs-title")) $("songs-title").textContent = songsCfg.title || "Our Favorite Songs";
+  if ($("songs-title-ar")) $("songs-title-ar").textContent = songsCfg.titleAr || "";
+  if ($("songs-hint")) $("songs-hint").textContent = songsCfg.hint || "";
+
+  const songsGrid = $("songs-grid");
+  let dynamicSongs = [];
+  let songsUseLocal = !db;
+
+  function sanitizeSongUrl(url) {
+    const trimmed = String(url || "").trim();
+    if (!trimmed) return "";
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        return parsed.href;
+      }
+    } catch {
+      return "";
+    }
+    return "";
+  }
+
+  function hasArabic(text) {
+    return /[\u0600-\u06FF]/.test(String(text || ""));
+  }
+
+  function populateSongFrame(container, song) {
+    container.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = song.src;
+    img.alt = song.name || "Favorite song screenshot";
+    img.loading = "lazy";
+
+    img.addEventListener("error", () => {
+      container.innerHTML = "";
+      const ph = document.createElement("div");
+      ph.className = "photo-placeholder tone-rose";
+      ph.innerHTML = `
+        <span class="ph-icon" aria-hidden="true">♪</span>
+        <span class="ph-label"></span>
+      `;
+      ph.querySelector(".ph-label").textContent = song.name || "Our favorite song";
+      container.appendChild(ph);
+    });
+
+    container.appendChild(img);
+  }
+
+  function renderSongs() {
+    if (!songsGrid) return;
+    const combinedSongs = [...(songsCfg.songs || []), ...dynamicSongs];
+    songsGrid.innerHTML = "";
+
+    if (!combinedSongs.length) {
+      const empty = document.createElement("p");
+      empty.className = "songs-empty";
+      empty.textContent =
+        songsCfg.emptyText || 'No songs pinned yet — tap "+ Add a Song" to save your first track ♪';
+      songsGrid.appendChild(empty);
+      return;
+    }
+
+    const tilts = [-1.8, 1.5, -1.2, 1.9, -1.4, 1.3];
+
+    combinedSongs.forEach((song, idx) => {
+      const card = document.createElement("article");
+      card.className = "song-card";
+      card.style.setProperty("--tilt", `${song.tilt ?? tilts[idx % tilts.length]}deg`);
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `View song: ${song.name || "Favorite song"}`);
+
+      const tape = document.createElement("div");
+      tape.className = `washi-tape washi-${song.tape || "blush"}`;
+      tape.setAttribute("aria-hidden", "true");
+
+      const noteBadge = document.createElement("span");
+      noteBadge.className = "song-badge-note";
+      noteBadge.setAttribute("aria-hidden", "true");
+      noteBadge.textContent = "♪";
+
+      card.append(tape, noteBadge);
+
+      if (song.addedBy) {
+        const authorPill = document.createElement("span");
+        authorPill.className = "polaroid-author-pill";
+        authorPill.textContent = `By ${song.addedBy} ♥`;
+        card.appendChild(authorPill);
+      }
+
+      const frame = document.createElement("div");
+      frame.className = "song-frame";
+      populateSongFrame(frame, song);
+
+      const body = document.createElement("div");
+      body.className = "song-body";
+
+      const title = document.createElement("h3");
+      title.className = "song-name";
+      title.dir = "auto";
+      title.textContent = song.name || "Untitled Song";
+      body.appendChild(title);
+
+      if (song.artist) {
+        const artist = document.createElement("p");
+        artist.className = "song-artist";
+        artist.dir = "auto";
+        artist.textContent = song.artist;
+        body.appendChild(artist);
+      }
+
+      if (song.quote) {
+        const quote = document.createElement("blockquote");
+        quote.className = "song-quote";
+        quote.dir = hasArabic(song.quote) ? "rtl" : "auto";
+        quote.textContent = `“${song.quote}”`;
+        body.appendChild(quote);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "song-card-footer";
+
+      const safeLink = sanitizeSongUrl(song.link);
+      if (safeLink) {
+        const listenLink = document.createElement("a");
+        listenLink.className = "song-listen-pill";
+        listenLink.href = safeLink;
+        listenLink.target = "_blank";
+        listenLink.rel = "noopener noreferrer";
+        listenLink.textContent = "▶ Listen";
+        listenLink.addEventListener("click", (e) => e.stopPropagation());
+        footer.appendChild(listenLink);
+      } else {
+        const tapHint = document.createElement("span");
+        tapHint.className = "song-tap-hint";
+        tapHint.textContent = "Tap to view ♪";
+        footer.appendChild(tapHint);
+      }
+
+      if (song.isUserAdded && song.id) {
+        const delBtn = document.createElement("button");
+        delBtn.className = "note-delete";
+        delBtn.type = "button";
+        delBtn.title = "Remove song";
+        delBtn.setAttribute("aria-label", "Remove song");
+        delBtn.textContent = "×";
+        delBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (confirm("Remove this song from our soundtrack?")) {
+            await deleteSongById(song.id);
+          }
+        });
+        footer.appendChild(delBtn);
+      }
+
+      card.append(frame, body, footer);
+
+      const openThisSong = () => openSongLightbox(song);
+      card.addEventListener("click", openThisSong);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openThisSong();
+        }
+      });
+
+      songsGrid.appendChild(card);
+    });
+  }
+
+  async function saveNewSong(songObj) {
+    if (db && !songsUseLocal) {
+      await db.collection("songs").add(songObj);
+    } else {
+      const next = [
+        { ...songObj, id: `song_${Date.now()}`, isUserAdded: true },
+        ...readLocal(LOCAL_SONGS_KEY),
+      ];
+      writeLocal(LOCAL_SONGS_KEY, next);
+      dynamicSongs = next;
+      renderSongs();
+    }
+  }
+
+  async function deleteSongById(id) {
+    if (!id) return;
+    if (db && !songsUseLocal) {
+      await db.collection("songs").doc(id).delete();
+    } else {
+      const next = readLocal(LOCAL_SONGS_KEY).filter((s) => s.id !== id);
+      writeLocal(LOCAL_SONGS_KEY, next);
+      dynamicSongs = next;
+      renderSongs();
+    }
+  }
+
+  if (db) {
+    db.collection("songs")
+      .orderBy("createdAt", "desc")
+      .onSnapshot(
+        (snapshot) => {
+          songsUseLocal = false;
+          dynamicSongs = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            isUserAdded: true,
+            ...doc.data(),
+          }));
+          renderSongs();
+        },
+        (err) => {
+          console.warn("Songs Firestore fallback to local:", err);
+          songsUseLocal = true;
+          dynamicSongs = readLocal(LOCAL_SONGS_KEY).map((s) => ({ ...s, isUserAdded: true }));
+          renderSongs();
+        }
+      );
+  } else {
+    dynamicSongs = readLocal(LOCAL_SONGS_KEY).map((s) => ({ ...s, isUserAdded: true }));
+    renderSongs();
+  }
+
+  // Add Song Modal
+  const addSongModal = $("add-song-modal");
+  const addSongForm = $("add-song-form");
+  const songPhotoInput = $("song-photo-input");
+  const songPhotoPreview = $("song-photo-preview");
+  const songDropzoneEmpty = $("song-dropzone-empty");
+  const addSongError = $("add-song-error");
+  const saveSongBtn = $("save-song-btn");
+  let selectedSongPhotoUrl = "";
+  let selectedSongTape = "blush";
+
+  function openAddSongModal() {
+    addSongModal.classList.add("is-open");
+    addSongModal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeAddSongModal() {
+    addSongModal.classList.remove("is-open");
+    addSongModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  if ($("open-add-song-btn")) {
+    $("open-add-song-btn").addEventListener("click", openAddSongModal);
+  }
+
+  if (addSongModal) {
+    addSongModal.addEventListener("click", (e) => {
+      if (e.target.dataset.closeAddSong === "true") closeAddSongModal();
+    });
+  }
+
+  document.querySelectorAll(".song-tape-choice").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".song-tape-choice").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      selectedSongTape = btn.dataset.songTape;
+    });
+  });
+
+  if (songPhotoInput) {
+    songPhotoInput.addEventListener("change", async () => {
+      const file = songPhotoInput.files && songPhotoInput.files[0];
+      if (!file) return;
+      addSongError.textContent = "";
+      try {
+        selectedSongPhotoUrl = await compressImageFile(file);
+        songPhotoPreview.src = selectedSongPhotoUrl;
+        songPhotoPreview.hidden = false;
+        songDropzoneEmpty.hidden = true;
+      } catch {
+        addSongError.textContent = "Could not load that screenshot. Please try another image.";
+      }
+    });
+  }
+
+  if (addSongForm) {
+    addSongForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = $("song-name").value.trim();
+      const artist = $("song-artist").value.trim();
+      const quote = $("song-quote").value.trim();
+      const rawLink = $("song-link").value.trim();
+      const addedBy = $("song-author").value;
+
+      if (!selectedSongPhotoUrl) {
+        addSongError.textContent = "Please upload a screenshot of the song first ♪ — اختاروا سكرين شوت الأول";
+        return;
+      }
+      if (!name) {
+        addSongError.textContent = "Please enter the song name ♪";
+        return;
+      }
+      if (!quote) {
+        addSongError.textContent = "Please write a favorite quote from the song ♥";
+        return;
+      }
+
+      const link = rawLink ? sanitizeSongUrl(rawLink) : "";
+      if (rawLink && !link) {
+        addSongError.textContent = "Please enter a valid link starting with https://";
+        return;
+      }
+
+      addSongError.textContent = "";
+      saveSongBtn.disabled = true;
+      saveSongBtn.textContent = "Saving...";
+
+      try {
+        const tilts = [-1.8, 1.5, -1.2, 1.9, -1.4, 1.3];
+        await saveNewSong({
+          src: selectedSongPhotoUrl,
+          name,
+          artist,
+          quote,
+          link,
+          addedBy,
+          tape: selectedSongTape,
+          tilt: tilts[Math.floor(Math.random() * tilts.length)],
+          isUserAdded: true,
+          createdAt: Date.now(),
+        });
+
+        addSongForm.reset();
+        selectedSongPhotoUrl = "";
+        songPhotoPreview.hidden = true;
+        songPhotoPreview.src = "";
+        songDropzoneEmpty.hidden = false;
+        closeAddSongModal();
+        spawnHearts($("open-add-song-btn"), 14);
+      } catch (err) {
+        console.error(err);
+        addSongError.textContent = "Could not save song. Check your connection or Firebase rules.";
+      } finally {
+        saveSongBtn.disabled = false;
+        saveSongBtn.textContent = "Add to Our Soundtrack ♪";
+      }
+    });
+  }
+
+  // Song Lightbox Modal
+  const songLightbox = $("song-lightbox");
+  const songLbAuthor = $("song-lb-author");
+  const songLbArtist = $("song-lb-artist");
+  const songLbQuote = $("song-lb-quote");
+  const songLbLink = $("song-lb-link");
+  const songLbDelete = $("song-lb-delete");
+  let activeSong = null;
+
+  function openSongLightbox(song) {
+    if (!songLightbox || !song) return;
+    activeSong = song;
+    populateSongFrame($("song-lb-frame"), song);
+    $("song-lb-name").textContent = song.name || "";
+
+    if (song.artist) {
+      songLbArtist.textContent = song.artist;
+      songLbArtist.hidden = false;
+    } else {
+      songLbArtist.hidden = true;
+    }
+
+    if (song.addedBy) {
+      songLbAuthor.textContent = `Added by ${song.addedBy} ♥`;
+      songLbAuthor.hidden = false;
+    } else {
+      songLbAuthor.hidden = true;
+    }
+
+    songLbQuote.textContent = song.quote ? `“${song.quote}”` : "";
+    songLbQuote.dir = hasArabic(song.quote) ? "rtl" : "auto";
+
+    const safeLink = sanitizeSongUrl(song.link);
+    if (safeLink) {
+      songLbLink.href = safeLink;
+      songLbLink.hidden = false;
+    } else {
+      songLbLink.hidden = true;
+    }
+
+    songLbDelete.hidden = !(song.isUserAdded && song.id);
+
+    songLightbox.classList.add("is-open");
+    songLightbox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeSongLightbox() {
+    if (!songLightbox) return;
+    songLightbox.classList.remove("is-open");
+    songLightbox.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    activeSong = null;
+  }
+
+  if (songLightbox) {
+    songLightbox.addEventListener("click", (e) => {
+      if (e.target.dataset.closeSongLb === "true") closeSongLightbox();
+    });
+  }
+
+  if (songLbDelete) {
+    songLbDelete.addEventListener("click", async () => {
+      if (!activeSong || !activeSong.id) return;
+      if (!confirm("Remove this song from our soundtrack?")) return;
+      await deleteSongById(activeSong.id);
+      closeSongLightbox();
+    });
+  }
 
   // ================= SHARED BUCKET LIST =================
   const bucketCfg = cfg.bucketSection;
@@ -998,6 +1414,14 @@
   document.addEventListener("keydown", (e) => {
     if (addModal.classList.contains("is-open") && e.key === "Escape") {
       closeAddModal();
+      return;
+    }
+    if (addSongModal && addSongModal.classList.contains("is-open") && e.key === "Escape") {
+      closeAddSongModal();
+      return;
+    }
+    if (songLightbox && songLightbox.classList.contains("is-open") && e.key === "Escape") {
+      closeSongLightbox();
       return;
     }
     if (!lightbox.classList.contains("is-open")) return;
